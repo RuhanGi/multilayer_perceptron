@@ -26,14 +26,15 @@ gen:
 	python3 $(SRCDIR)/split.py data/data.csv
 
 clean:
-	# rm -rf
+	find . -name "__pycache__" -exec rm -rf {} \;
+	rm -rf data/train.csv data/val.csv
 
 fclean: clean
-	# rm -rf 
+	find . -name .DS_Store -delete
 
 gpush: fclean
 	git add .
-	git commit -m "start"
+	git commit -m "split"
 	git push
 
 re: fclean all

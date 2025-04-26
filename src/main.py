@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import sys
 
+from DenseLayer import DenseLayer
+
 
 RED = "\033[91m"
 GREEN = "\033[92m"
@@ -58,14 +60,14 @@ def main():
         print(RED + "Pass Data to Train!" + RESET)
         sys.exit(1)
 
-    df = loadData(sys.argv[1])
-    df = cleanData(df)
-    
-    # print(CYAN, df.describe())
+    # df = loadData(sys.argv[1])
+    # df = cleanData(df)
     
     # plotData(df)
-    
-    plot_correlation_matrix(df)
+    # plot_correlation_matrix(df)
+
+    test = DenseLayer(30,24)
+    print(test)
 
 
 if __name__ == "__main__":
