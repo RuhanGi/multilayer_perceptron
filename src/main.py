@@ -25,26 +25,39 @@ def loadData(fil):
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
 
-
-def cleanData(df):
-    try:
-        float_cols = df.select_dtypes(include=['float64'])
-        df.dropna(inplace=True, subset=float_cols.columns)
-        df.drop_duplicates(inplace=True)
-        return df
-    except Exception as e:
-        print(RED + "Error: " + str(e) + RESET)
-        sys.exit(1)
-
 def plotData(df):
-    df.iloc[:, 2:32].boxplot(figsize=(15, 12), rot=90)
-    plt.title("Boxplot of Features")
-    plt.yscale("log")
-    plt.gcf().canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
+    diagnosis_col = df.columns[1]
+    score_cols = df.select_dtypes(include="float64").columns
+    df[1] = df[1].map({'M': 1, 'B': 0})
+    target_corr = df.iloc[:, 1:].corr()[1].drop(1)
+    sorted_features = target_corr.abs().sort_values(ascending=False).index
+
+    df_long = df.melt(id_vars=diagnosis_col, value_vars=score_cols,
+        var_name="Feature", value_name="Value")
+
+    df_long["Feature"] = pd.Categorical(df_long["Feature"], categories=sorted_features, ordered=True)
+
+    plt.figure(figsize=(20, 12))
+    sns.boxplot(
+        data=df_long,
+        x="Feature",
+        y="Value",
+        hue=diagnosis_col
+        # ,log_scale=True
+    )
+    plt.ylim(-4, 6)
+    plt.xticks(rotation=90)
+    plt.title("Boxplots of Features by Diagnosis (M or B)")
+    plt.tight_layout()
+    plt.gcf().canvas.mpl_connect(
+        'key_press_event', 
+        lambda event: plt.close() if event.key == 'escape' else None
+    )
     plt.show()
 
 def plot_correlation_matrix(df):
-    correlation_matrix = df.iloc[:, 2:].corr()
+    df[1] = df[1].map({'M': 1, 'B': 0})
+    correlation_matrix = df.iloc[:, 1:].corr()
 
     mask = np.tril(np.ones_like(correlation_matrix, dtype=bool))
 
@@ -55,19 +68,26 @@ def plot_correlation_matrix(df):
     plt.gcf().canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
     plt.show()
 
+# TODO Feature Selection Techniques:
+# *Here are some ways to automatically select relevant features:
+# *Univariate selection (e.g., using statistical tests like Chi-square, ANOVA, etc.)
+# *Feature importance (e.g., using models like Decision Trees or Random Forest, which rank features by importance)
+# *L1 regularization (Lasso) in linear models, which penalizes less important features and forces their coefficients to zero.
+# *PCA (Principal Component Analysis) for dimensionality reduction (which can also help avoid collinearity).
+
 def main():
     if len(sys.argv) != 2:
         print(RED + "Pass Data to Train!" + RESET)
         sys.exit(1)
 
-    # df = loadData(sys.argv[1])
-    # df = cleanData(df)
-    
-    # plotData(df)
-    # plot_correlation_matrix(df)
+    df = loadData(sys.argv[1])
 
-    test = DenseLayer(30,24)
-    print(test)
+    features = df.columns[2:]
+    df[features] = (df[features] - df[features].mean()) / df[features].std()
+    plotData(df)
+    plot_correlation_matrix(df)
+
+    # test = DenseLayer(30,24)
 
 
 if __name__ == "__main__":

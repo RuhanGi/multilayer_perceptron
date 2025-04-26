@@ -22,6 +22,9 @@ check:
 a:
 	python3 $(SRCDIR)/main.py data/data.csv
 
+t:
+	python3 $(SRCDIR)/train.py data/train.csv data/val.csv
+
 gen:
 	python3 $(SRCDIR)/split.py data/data.csv
 
@@ -34,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "split"
+	git commit -m "analysis"
 	git push
 
 re: fclean all
