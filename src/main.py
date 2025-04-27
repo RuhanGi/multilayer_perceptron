@@ -28,7 +28,6 @@ def loadData(fil):
 def plotData(df):
     diagnosis_col = df.columns[1]
     score_cols = df.select_dtypes(include="float64").columns
-    df[1] = df[1].map({'M': 1, 'B': 0})
     target_corr = df.iloc[:, 1:].corr()[1].drop(1)
     sorted_features = target_corr.abs().sort_values(ascending=False).index
 
@@ -56,7 +55,6 @@ def plotData(df):
     plt.show()
 
 def plot_correlation_matrix(df):
-    df[1] = df[1].map({'M': 1, 'B': 0})
     correlation_matrix = df.iloc[:, 1:].corr()
 
     mask = np.tril(np.ones_like(correlation_matrix, dtype=bool))
@@ -75,6 +73,21 @@ def plot_correlation_matrix(df):
 # *L1 regularization (Lasso) in linear models, which penalizes less important features and forces their coefficients to zero.
 # *PCA (Principal Component Analysis) for dimensionality reduction (which can also help avoid collinearity).
 
+def plotFunc(df):
+    plt.figure(figsize=(12, 8))
+
+    top = [29,24,9,22,4]
+    # top = [29,24,9,22,4,25,2,5,8,28,7,27,12,14,15]
+    plt.scatter(df[top].sum(axis=1) / len(top), df[1])
+    for i, col in enumerate(top):
+        plt.scatter(df[col], df[1] + 0.05*(i+1))
+
+    # plt.xlim(-3, 5)
+    plt.ylim(-0.5, 2)
+    plt.tight_layout()
+    plt.gcf().canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
+    plt.show()
+
 def main():
     if len(sys.argv) != 2:
         print(RED + "Pass Data to Train!" + RESET)
@@ -84,8 +97,10 @@ def main():
 
     features = df.columns[2:]
     df[features] = (df[features] - df[features].mean()) / df[features].std()
-    plotData(df)
-    plot_correlation_matrix(df)
+    df[1] = df[1].map({'M': 1, 'B': 0})
+    # plotData(df)
+    # plot_correlation_matrix(df)
+    plotFunc(df)
 
     # test = DenseLayer(30,24)
 

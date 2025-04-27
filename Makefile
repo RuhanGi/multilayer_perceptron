@@ -29,7 +29,7 @@ gen:
 	python3 $(SRCDIR)/split.py data/data.csv
 
 clean:
-	find . -name "__pycache__" -exec rm -rf {} \;
+	find . -name "__pycache__" -exec rm -rf {} \; || true
 	rm -rf data/train.csv data/val.csv
 
 fclean: clean
@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "analysis"
+	git commit -m "sigmoid"
 	git push
 
 re: fclean all
