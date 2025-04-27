@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import sys
 
-from Network import Network
+from arch import Network
 
 
 RED = "\033[91m"

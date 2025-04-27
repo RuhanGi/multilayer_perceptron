@@ -1,4 +1,4 @@
-from DenseLayer import DenseLayer
+from .DenseLayer import DenseLayer
 
 
 class Network:

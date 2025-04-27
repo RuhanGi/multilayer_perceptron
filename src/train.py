@@ -1,4 +1,4 @@
-from Network import Network
+from arch import Network
 import pandas as pd
 import numpy as np
 import sys

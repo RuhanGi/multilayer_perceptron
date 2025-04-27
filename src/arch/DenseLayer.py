@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import numpy as np
-from Perceptron import Perceptron
+from .Perceptron import Perceptron
 
 
 @dataclass
