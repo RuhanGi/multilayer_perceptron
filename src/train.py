@@ -65,14 +65,10 @@ def main():
     train = loadData(sys.argv[1])
     val = loadData(sys.argv[2])
 
-    features = train.columns[2:]
-    train[features] = (train[features] - train[features].mean()) / train[features].std()
-    train[1] = train[1].map({'M': 1, 'B': 0})
-
     n = Network(train.shape[1]-2)
-    n.addLayer(24)
-    n.addLayer(24)
-    n.addLayer(2)
+    # n.addLayer(24)
+    # n.addLayer(15)
+    n.addLayer(2, activation='softmax')
     print(n.fit(train, val))
 
 

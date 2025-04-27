@@ -3,6 +3,10 @@ import numpy as np
 from .Perceptron import Perceptron
 
 
+def softmax(z):
+    exp = np.exp(z)
+    return exp / np.sum(exp)
+
 @dataclass
 class DenseLayer:
     """
@@ -11,8 +15,8 @@ class DenseLayer:
         Attributes:
         num_inputs: number of inputs
         num_nodes: number of nodes layer
-
-        activation: activation function
+        act: activation function
+        perceps: stores every Perceptron in that layer
     """
     num_input: int
     num_nodes: int
@@ -28,4 +32,11 @@ class DenseLayer:
             ))
 
     def calculate(self, input):
-        return [p.calculate(input) for p in self.perceps]
+        if self.act == 'softmax':
+            return softmax([p.calculate(input) for p in self.perceps])
+        else:
+            return [p.calculate(input) for p in self.perceps]
+
+    def backprop(self, pred):
+        for i in range(self.num_nodes):
+            self.perceps[i].backprop(pred[i])

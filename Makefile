@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "Architecture Package"
+	git commit -m "BackProp Attempt"
 	git push
 
 re: fclean all

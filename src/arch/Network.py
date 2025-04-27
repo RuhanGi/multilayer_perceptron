@@ -16,8 +16,22 @@ class Network:
 
     def fit(self, train, val, loss='categoricalCrossentropy',
                 learningRate=0.01, batch_size=8, epochs=84):
+        features = train.columns[2:]
+        train[features] = (train[features] - train[features].mean()) / train[features].std()
+        train[1] = train[1].map({'M': 1, 'B': 0})
+
+    
         output = train.iloc[0][2:]
         for i in self.layers:
             output = i.calculate(output)
+        print(output)
+
+
+        while True:
+            self.layers[-1].backprop(output)
+            output = train.iloc[0][2:]
+            for i in self.layers:
+                output = i.calculate(output)
+            print(output)
         return output
         

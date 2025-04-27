@@ -6,6 +6,9 @@ import numpy as np
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
+def dsigmoid(x):
+    return sigmoid(x) * (1 - sigmoid(x))
+
 # * 2. Hyperbolic Tangent
 def tanh(x):
     return 2 * sigmoid(2 * x) - 1
@@ -19,11 +22,9 @@ def ELU(x, alpha=1.67326, lam=1.0507):
     return lam * max(alpha * (np.exp(x) - 1), x)
 
 
-# ? Exponential Linear Units
-# * 1. Softmax for Multi-Class
-def softmax(z):
-    exp = np.exp(z)
-    return exp / np.sum(exp)
+# * Linear - no change
+def linear(z):
+    return z
 
 # * 2. Softplus
 def softplus(x):
@@ -49,7 +50,8 @@ class Perceptron:
             'tanh' : tanh,
             'ReLU' : ReLU,
             'ELU' : ELU,
-            'softplus': softplus
+            'softmax' : linear,
+            'softplus' : softplus
         }
         self.weights = weights
         self.bias = 0
@@ -57,4 +59,12 @@ class Perceptron:
         self.func = funcy[act]
 
     def calculate(self, input):
-        return float(self.func(np.dot(self.weights, input) + self.bias))
+        self.input = input
+        self.out = np.dot(self.weights, input) + self.bias
+        return float(self.func(self.out))
+
+    def backprop(self, pred):
+        learningRate = 0.4
+        error = 1 - pred
+        self.weights -= learningRate * error * dsigmoid(self.out) * np.array(self.input)
+        self.bias -= learningRate * error * dsigmoid(self.out)
