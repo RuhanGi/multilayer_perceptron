@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "sigmoid"
+	git commit -m "Network Made"
 	git push
 
 re: fclean all

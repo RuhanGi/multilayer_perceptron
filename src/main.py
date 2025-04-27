@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import sys
 
-from DenseLayer import DenseLayer
+from Network import Network
 
 
 RED = "\033[91m"
@@ -102,8 +102,7 @@ def main():
     # plot_correlation_matrix(df)
     plotFunc(df)
 
-    # test = DenseLayer(30,24)
-
 
 if __name__ == "__main__":
     main()
+    

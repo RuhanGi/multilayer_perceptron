@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import numpy as np
+from Perceptron import Perceptron
 
 
 @dataclass
@@ -12,24 +13,19 @@ class DenseLayer:
         num_nodes: number of nodes layer
 
         activation: activation function
-        weights: weight matrix
     """
     num_input: int
     num_nodes: int
-    activation: str = 'sigmoid'
-    weights: str = 'identity'
-    biases: np.ndarray = field(init=False) 
-    wmatrix: np.ndarray = field(init=False)
+    act: str = 'sigmoid'
+    perceps: list = field(default_factory=list)
 
     def __post_init__(self):
-        self.biases = np.zeros(self.num_nodes)
-        
-        if self.weights == 'identity':
-            self.wmatrix = np.identity(self.num_nodes)
-        elif self.weights == 'heUniform':
-            self.wmatrix = np.random.uniform(
-                low = -np.sqrt(6/self.num_nodes),
-                high = np.sqrt(6/self.num_nodes),
-                size=(self.num_input, self.num_nodes)
-            )
-            
+        limit = np.sqrt(6 / self.num_input)
+        for i in range(self.num_nodes):
+            self.perceps.append(Perceptron(
+                np.random.uniform(-limit, limit, self.num_input),
+                act=self.act
+            ))
+
+    def calculate(self, input):
+        return [p.calculate(input) for p in self.perceps]

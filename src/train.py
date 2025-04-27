@@ -1,3 +1,4 @@
+from Network import Network
 import pandas as pd
 import numpy as np
 import sys
@@ -22,39 +23,39 @@ def loadData(fil):
         sys.exit(1)
 
 def epoch(ndata, y, th):
-	# TODO backpropagation and gradient descent
+    # TODO backpropagation and gradient descent
     # TODO Nesterov momentum, RMSprop, adam,
-	return th - learningRate * grad / m
+    return th - learningRate * grad / m
 
 def trainModel(data, y, headers, n):
-	try:
-		classes = np.unique(y)
+    try:
+        classes = np.unique(y)
 
         # TODO create the weight matrix
 
-		# * normalize
+        # * normalize
 
-		maxiterations = 100
-		for i in range(maxiterations): # TODO add tqdm()
-			th = epoch(ndata, y, th)
-			print(f"\rEpoch [{i}/{maxiterations}]",end="")
+        maxiterations = 100
+        for i in range(maxiterations): # TODO add tqdm()
+            th = epoch(ndata, y, th)
+            print(f"\rEpoch [{i}/{maxiterations}]",end="")
 
             # TODO add train_loss, trainF1, val_loss, valF1, accuracy
 
-		    # * add early stopping when overfitting valF1 score decreases
+            # * add early stopping when overfitting valF1 score decreases
 
         # TODO learning curve graphs: Loss + Accuracy
         # TODO multiple curves on same graph (models)
         # TODO history of metrics obtained
     
-		print(GREEN + "\rModel Trained!" + (" " * 30) + RESET)
+        print(GREEN + "\rModel Trained!" + (" " * 30) + RESET)
 
-		# * denormalize
+        # * denormalize
 
-		return th
-	except Exception as e:
-		print(RED + "Error: " + str(e) + RESET)
-		sys.exit(1)
+        return th
+    except Exception as e:
+        print(RED + "Error: " + str(e) + RESET)
+        sys.exit(1)
 
 def main():
     if len(sys.argv) != 3:
@@ -64,8 +65,15 @@ def main():
     train = loadData(sys.argv[1])
     val = loadData(sys.argv[2])
 
-    print(train[1].value_counts())
-    print(val[1].value_counts())
+    features = train.columns[2:]
+    train[features] = (train[features] - train[features].mean()) / train[features].std()
+    train[1] = train[1].map({'M': 1, 'B': 0})
+
+    n = Network(train.shape[1]-2)
+    n.addLayer(24)
+    n.addLayer(24)
+    n.addLayer(2)
+    print(n.fit(train, val))
 
 
 if __name__ == "__main__":

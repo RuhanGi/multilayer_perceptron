@@ -31,6 +31,7 @@ def cleanData(df):
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
 
+
 def splitData(df, ratio=0.8):
     np.random.seed(42)
 
@@ -38,6 +39,7 @@ def splitData(df, ratio=0.8):
     size = int(0.8 * len(df))
 
     return df.iloc[shuffle[:size]], df.iloc[shuffle[size:]]
+
 
 def main():
     if len(sys.argv) != 2:
@@ -47,7 +49,7 @@ def main():
     df = loadData(sys.argv[1])
     df = cleanData(df)
     train, val = splitData(df)
-    
+
     train.to_csv("data/train.csv", header=False, index=False)
     val.to_csv("data/val.csv", header=False, index=False)
 
