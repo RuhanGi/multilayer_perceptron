@@ -29,7 +29,7 @@ gen:
 	python3 $(SRCDIR)/split.py data/data.csv
 
 clean:
-	find . -name "__pycache__" -exec rm -rf {} \; || true
+	find . \( -name "__pycache__" -o -name ".DS_Store" \) -print0 | xargs -0 rm -rf
 	rm -rf data/train.csv data/val.csv
 
 fclean: clean
