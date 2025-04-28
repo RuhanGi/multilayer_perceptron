@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "BackProp Attempt"
+	git commit -m "TrainLoop Config"
 	git push
 
 re: fclean all

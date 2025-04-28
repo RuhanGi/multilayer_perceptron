@@ -69,7 +69,7 @@ def main():
     # n.addLayer(24)
     # n.addLayer(15)
     n.addLayer(2, activation='softmax')
-    print(n.fit(train, val))
+    n.fit(train, val)
 
 
 if __name__ == "__main__":
