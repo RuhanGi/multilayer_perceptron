@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "TrainLoop Config"
+	git commit -m "Train"
 	git push
 
 re: fclean all

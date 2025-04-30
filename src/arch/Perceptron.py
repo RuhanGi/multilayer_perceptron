@@ -13,24 +13,36 @@ def dsigmoid(x):
 def tanh(x):
     return 2 * sigmoid(2 * x) - 1
 
+def dtanh(x):
+    return 4 * dsigmoid(2 * x)
+
 # * 3. Rectified Linear Unit 
 def ReLU(x, r=0):
     return max(r * x, x)
+
+def dReLU(x, r=0):
+    return 1 if x > 0 else r
 
 # * 4. Exponential Linear Unit
 def ELU(x, alpha=1.67326, lam=1.0507):
     return lam * max(alpha * (np.exp(x) - 1), x)
 
+def dELU(x, alpha=1.67326, lam=1.0507):
+    return lam if x > 0 else lam * alpha * np.exp(x) * (np.exp(x) - 1)
 
 # * Linear - no change
 def linear(z):
     return z
 
+def dlinear(z):
+    return np.ones_like(z)
+
 # * 2. Softplus
 def softplus(x):
-    if x > 20:
-        return x
-    return np.log(1 + np.exp(x))
+    return x if x > 20 else np.log(1 + np.exp(x))
+
+def dsoftplus(x):
+    return 1 if x > 20 else 1 - sigmoid(-x)
 
 
 class Perceptron:
@@ -53,18 +65,42 @@ class Perceptron:
             'softmax' : linear,
             'softplus' : softplus
         }
+        dfuncy = {
+            'sigmoid' : dsigmoid,
+            'tanh' : dtanh,
+            'ReLU' : dReLU,
+            'ELU' : dELU,
+            'softmax' : dlinear,
+            'softplus' : dsoftplus
+        }
         self.weights = weights
         self.bias = 0
         self.activation = act
         self.func = funcy[act]
+        self.dfunc = dfuncy[act]
+
+    def setOutput(self, out):
+        self.output = out
 
     def calculate(self, input):
-        self.input = input
-        self.out = np.dot(self.weights, input) + self.bias
-        return float(self.func(self.out))
+        self.input = np.array(input.iloc[:, 2:])
+        self.preFunc = np.dot(self.input, self.weights) + self.bias
+        self.output = self.func(self.preFunc)
+        return self.output
 
+# ? dL   dL   dy    dz
+# ? dw   dy   dz    dw
+
+    # * pred is batch_size length, of 1s or 0s
+    # * self.output is batch_size length, of softmax probabilities
+    # * error is likewise batch_size length
+    # * grad is therefore batch_size length
+    # * self.weights has input length so 30 in this context
+    # * self.input = 8x30
     def backprop(self, pred):
         learningRate = 0.4
-        error = 1 - pred
-        self.weights -= learningRate * error * dsigmoid(self.out) * np.array(self.input)
-        self.bias -= learningRate * error * dsigmoid(self.out)
+        error = pred - self.output
+        grad = learningRate * error[:, None] * self.dfunc(self.preFunc)[:, None]
+        self.weights -= np.sum(self.input * grad, axis=0)
+        self.bias -= np.sum(grad)
+        return error

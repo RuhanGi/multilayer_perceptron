@@ -4,8 +4,9 @@ from .Perceptron import Perceptron
 
 
 def softmax(z):
-    exp = np.exp(z)
-    return exp / np.sum(exp)
+    exp = np.exp(z - np.max(z, axis=0, keepdims=True))
+    return exp / np.sum(exp, axis=0, keepdims=True)
+
 
 @dataclass
 class DenseLayer:
@@ -33,10 +34,16 @@ class DenseLayer:
 
     def calculate(self, input):
         if self.act == 'softmax':
-            return softmax([p.calculate(input) for p in self.perceps])
+            soft = softmax([p.calculate(input) for p in self.perceps])
+            for p,s in zip(self.perceps, soft):
+                p.setOutput(s)
+            return soft
         else:
             return [p.calculate(input) for p in self.perceps]
 
     def backprop(self, pred):
-        for i in range(self.num_nodes):
-            self.perceps[i].backprop(pred[i])
+        error = pred
+        for p in self.perceps:
+            error = p.backprop(pred)
+        return error
+        

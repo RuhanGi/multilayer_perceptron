@@ -1,5 +1,5 @@
 from .DenseLayer import DenseLayer
-
+import numpy as np
 
 class Network:
     """
@@ -20,12 +20,21 @@ class Network:
         features = train.columns[2:]
         train[features] = (train[features] - train[features].mean()) / train[features].std()
         train[1] = train[1].map({'M': 1, 'B': 0})
-
+        for _ in range(100):
+            for i in range(0, len(train), batch_size):
+        
+                output = train.iloc[i:i+batch_size]
+                for layer in self.layers:
+                    output = layer.calculate(output)
+                
+                pred = np.array(train.iloc[i:i+batch_size, 1])
+                for i in reversed(self.layers):
+                    pred = layer.backprop(pred)
+        
+        
         for i in range(0, len(train), batch_size):
-    
-            output = train[2:].iloc[i:i+batch_size]
+            output = train.iloc[i:i+batch_size]
             for layer in self.layers:
                 output = layer.calculate(output)
-
-            for i in reversed(self.layers):
-                output = layer.backprop(output)
+            np.set_printoptions(suppress=True, linewidth=200)
+            print(np.transpose(output))

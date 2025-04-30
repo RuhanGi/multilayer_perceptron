@@ -32,11 +32,11 @@ def cleanData(df):
         sys.exit(1)
 
 
-def splitData(df, ratio=0.8):
+def splitData(df, ratio=0.025):
     np.random.seed(42)
 
     shuffle = np.random.permutation(df.index)
-    size = int(0.8 * len(df))
+    size = int(ratio * len(df))
 
     return df.iloc[shuffle[:size]], df.iloc[shuffle[size:]]
 
