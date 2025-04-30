@@ -83,7 +83,7 @@ class Perceptron:
         self.output = out
 
     def calculate(self, input):
-        self.input = np.array(input.iloc[:, 2:])
+        self.input = np.array(input)
         self.preFunc = np.dot(self.input, self.weights) + self.bias
         self.output = self.func(self.preFunc)
         return self.output

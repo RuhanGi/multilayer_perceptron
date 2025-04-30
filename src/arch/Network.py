@@ -18,25 +18,29 @@ class Network:
                 learningRate=0.01, batch_size=8, epochs=84):
 
         features = train.columns[2:]
-        train[features] = (train[features] - train[features].mean()) / train[features].std()
+        mean = train[features].mean()
+        std = train[features].std()
+        train[features] = (train[features] - mean) / std
         train[1] = train[1].map({'M': 1, 'B': 0})
-        for _ in range(2):
+        for _ in range(10):
             for i in range(0, len(train), batch_size):
         
-                output = train.iloc[i:i+batch_size]
+                output = train.iloc[i:i+batch_size,2:]
                 for layer in self.layers:
                     output = layer.calculate(output)
                 
                 pred = np.array(train.iloc[i:i+batch_size, 1])
                 for layer in reversed(self.layers):
                     pred = layer.backprop(pred)
+    
+        features = val.columns[2:]
+        val[features] = (val[features] - mean) / std
         
         val[1] = val[1].map({'M': 1, 'B': 0})
-        predictions = val
+        predictions = val.iloc[:, 2:]
         for layer in self.layers:
             predictions = layer.calculate(predictions)
         predictions = predictions[0]
-        print(predictions)
 
         count = 0
         for i in range(len(predictions)):

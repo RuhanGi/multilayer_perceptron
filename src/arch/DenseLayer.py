@@ -42,8 +42,9 @@ class DenseLayer:
             return [p.calculate(input) for p in self.perceps]
 
     def backprop(self, pred):
-        error = pred
+        error = []
         for p in self.perceps:
-            error = p.backprop(pred)
+            error.append(p.backprop(pred))
+        # print(error)
         return error
         
