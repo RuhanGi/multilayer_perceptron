@@ -100,7 +100,7 @@ class Perceptron:
     def backprop(self, pred):
         learningRate = 0.4
         error = pred - self.output
-        grad = learningRate * error[:, None] * self.dfunc(self.preFunc)[:, None]
-        self.weights -= np.sum(self.input * grad, axis=0)
-        self.bias -= np.sum(grad)
+        grad = self.dfunc(self.preFunc) * error
+        self.weights -= learningRate * self.input.T @ grad
+        self.bias -= learningRate * np.sum(grad)
         return error

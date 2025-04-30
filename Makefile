@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "Train"
+	git commit -m "Val Test"
 	git push
 
 re: fclean all

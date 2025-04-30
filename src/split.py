@@ -32,7 +32,7 @@ def cleanData(df):
         sys.exit(1)
 
 
-def splitData(df, ratio=0.025):
+def splitData(df, ratio=0.8):
     np.random.seed(42)
 
     shuffle = np.random.permutation(df.index)

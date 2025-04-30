@@ -34,7 +34,7 @@ class DenseLayer:
 
     def calculate(self, input):
         if self.act == 'softmax':
-            soft = softmax([p.calculate(input) for p in self.perceps])
+            soft = softmax(np.array([p.calculate(input) for p in self.perceps]))
             for p,s in zip(self.perceps, soft):
                 p.setOutput(s)
             return soft
