@@ -83,20 +83,11 @@ class Perceptron:
         self.output = out
 
     def calculate(self, input):
-        self.input = np.array(input)
+        self.input = input
         self.preFunc = np.dot(self.input, self.weights) + self.bias
         self.output = self.func(self.preFunc)
         return self.output
 
-# ? dL   dL   dy    dz
-# ? dw   dy   dz    dw
-
-    # * pred is batch_size length, of 1s or 0s
-    # * self.output is batch_size length, of softmax probabilities
-    # * error is likewise batch_size length
-    # * grad is therefore batch_size length
-    # * self.weights has input length so 30 in this context
-    # * self.input = 8x30
     def backprop(self, pred):
         learningRate = 0.4
         error = pred - self.output

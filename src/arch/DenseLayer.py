@@ -39,12 +39,12 @@ class DenseLayer:
                 p.setOutput(s)
             return soft
         else:
-            return [p.calculate(input) for p in self.perceps]
+            return np.array([p.calculate(input) for p in self.perceps])
+
 
     def backprop(self, pred):
         error = []
-        for p in self.perceps:
-            error.append(p.backprop(pred))
-        # print(error)
+        for i,p in enumerate(self.perceps):
+            error.append(p.backprop(pred[:,i]))
         return error
         

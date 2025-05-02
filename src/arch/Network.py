@@ -21,7 +21,8 @@ class Network:
         mean = train[features].mean()
         std = train[features].std()
         train[features] = (train[features] - mean) / std
-        train[1] = train[1].map({'M': 1, 'B': 0})
+        actual = train[1].map({'B': [0, 1], 'M': [1, 0]})
+
         for _ in range(10):
             for i in range(0, len(train), batch_size):
         
@@ -29,7 +30,7 @@ class Network:
                 for layer in self.layers:
                     output = layer.calculate(output)
                 
-                pred = np.array(train.iloc[i:i+batch_size, 1])
+                pred = np.vstack(actual.values)[i:i+batch_size]
                 for layer in reversed(self.layers):
                     pred = layer.backprop(pred)
     
@@ -40,12 +41,9 @@ class Network:
         predictions = val.iloc[:, 2:]
         for layer in self.layers:
             predictions = layer.calculate(predictions)
-        predictions = predictions[0]
-
+        predictions = np.argmax(predictions, axis=0)
         count = 0
         for i in range(len(predictions)):
-            if predictions[i] >= 0.5 and val.iloc[i, 1] == 1:
-                count += 1
-            elif predictions[i] < 0.5 and val.iloc[i, 1] == 0:
+            if predictions[i] == val.iloc[i, 1]:
                 count += 1
         print("Accuracy: ", count/len(predictions)*100, "%")
