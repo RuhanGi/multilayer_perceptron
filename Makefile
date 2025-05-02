@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "Order fix"
+	git commit -m "Restructure"
 	git push
 
 re: fclean all

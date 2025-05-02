@@ -15,7 +15,7 @@ class Network:
         self.layers.append(DenseLayer(inputs, num_nodes, act=activation))
 
     def fit(self, train, val, loss='categoricalCrossentropy',
-                learningRate=0.01, batch_size=8, epochs=84):
+                learningRate=0.01, batch_size=8, epochs=10):
 
         features = train.columns[2:]
         mean = train[features].mean()
@@ -23,7 +23,7 @@ class Network:
         train[features] = (train[features] - mean) / std
         actual = train[1].map({'B': [0, 1], 'M': [1, 0]})
 
-        for _ in range(10):
+        for _ in range(epochs):
             for i in range(0, len(train), batch_size):
         
                 output = train.iloc[i:i+batch_size,2:]
