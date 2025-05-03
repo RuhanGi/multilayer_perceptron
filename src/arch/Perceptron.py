@@ -1,5 +1,8 @@
 import numpy as np
 
+def p(a):
+    print(a, a.shape)
+
 class Perceptron:
     """
         Stores Perceptron
@@ -23,10 +26,10 @@ class Perceptron:
         self.z = np.dot(input, self.weights) + self.bias
         return self.z
 
-    def backprop(self, pred, f):
+    def backprop(self, error, dfunc):
         learningRate = 0.4
-        error = pred - self.z
-        grad = f(self.z) * error
+        grad = error * dfunc(self.z)
+        p(grad)
         self.weights -= learningRate * self.input.T @ grad
         self.bias -= learningRate * np.sum(grad)
-        return error
+        return grad * self.weights

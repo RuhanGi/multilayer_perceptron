@@ -3,7 +3,6 @@ import numpy as np
 from .Perceptron import Perceptron
 
 
-
 # ? NONLINEAR FUNCTIONS
 # * 1. Sigmoid - center: (0,0.5)
 def sigmoid(x):
@@ -66,8 +65,7 @@ class DenseLayer:
     """
     num_input: int
     num_nodes: int
-    act: str = 'sigmoid'
-    perceps: list = field(default_factory=list)
+    act: str
 
     def __post_init__(self):
         funcy = {
@@ -95,11 +93,15 @@ class DenseLayer:
 
     def calculate(self, input):
         self.output = self.func(np.array([p.calculate(input) for p in self.perceps]))
-        return self.output
+        return self.output.T
 
-    def backprop(self, pred):
-        error = []
+    def backprop(self, error):
+        """
+        error: array storing errors of each node
+        """
+        assert error.shape[1] == self.num_nodes, "shape mismatch"
+        newerr = np.array([])
         for i,p in enumerate(self.perceps):
-            error.append(p.backprop(pred[:,i], self.dfunc))
-        return error
+            np.append(newerr, p.backprop(error[:,i], self.dfunc))
+        return newerr.T
         

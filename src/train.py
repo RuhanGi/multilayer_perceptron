@@ -14,14 +14,6 @@ GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
 
-
-def loadData(fil):
-    try:
-        return pd.read_csv(fil, header=None)
-    except Exception as e:
-        print(RED + "Error: " + str(e) + RESET)
-        sys.exit(1)
-
 def epoch(ndata, y, th):
     # TODO backpropagation and gradient descent
     # TODO Nesterov momentum, RMSprop, adam,
@@ -57,19 +49,31 @@ def trainModel(data, y, headers, n):
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
 
+def loadData(fil):
+    try:
+        df = pd.read_csv(fil, header=None)
+        train = np.array(df.iloc[:, 2:])
+        train_out = np.array(df.iloc[:,1])
+        return train, train_out
+    except Exception as e:
+        print(RED + "Error: " + str(e) + RESET)
+        sys.exit(1)
+
 def main():
     if len(sys.argv) != 3:
         print(GREEN + " Usage:  " + YELLOW + "python3 train.py {traindata}.csv {valdata}.csv" + RESET)
         sys.exit(0)
 
-    train = loadData(sys.argv[1])
-    val = loadData(sys.argv[2])
+    np.set_printoptions(linewidth=200, suppress=True)
 
-    n = Network(train.shape[1]-2)
-    # n.addLayer(24)
-    # n.addLayer(15)
+    train, train_out = loadData(sys.argv[1])
+    val, val_out = loadData(sys.argv[2])
+
+    n = Network(train.shape[1])
+    n.addLayer(24)
+    n.addLayer(15)
     n.addLayer(2, activation='softmax')
-    n.fit(train, val)
+    n.fit(train, train_out, val, val_out)
 
 
 if __name__ == "__main__":
