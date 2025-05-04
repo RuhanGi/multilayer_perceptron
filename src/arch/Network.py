@@ -14,6 +14,9 @@ GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
 
+def binaryCross(true, pred):
+
+
 def categoricalCrossentropy(true, pred):
     epsilon = 1e-15
     pred = np.clip(pred, epsilon, 1 - epsilon)
@@ -38,8 +41,10 @@ class Network:
         for layer in self.layers:
             val = layer.calculate(val)
         pred = np.argmax(val, axis=1)
-        onehot = np.eye(len(self.mapper))[val_out]
-        metrics['Loss'].append(categoricalCrossentropy(onehot, val))
+        # onehot = np.eye(len(self.mapper))[val_out]
+        # metrics['Loss'].append(categoricalCrossentropy(onehot, val))
+        metrics['Loss'].append(binaryCross(val_out, val))
+        print(val.shape)
         metrics['Acc'].append(np.mean(pred == val_out))
 
         tp = np.sum((pred == 1) & (val_out == 1))
