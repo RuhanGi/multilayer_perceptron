@@ -73,7 +73,6 @@ class Network:
 
     def fit(self, train, train_out, val, val_out,
                 learningRate=0.01, batch_size=100, epochs=40):
-                # learningRate=0.01, batch_size=8, epochs=30):
         assert len(train) == len(train_out), "sample mismatch"
         assert len(val) == len(val_out), "sample mismatch"
         assert train.shape[1] == val.shape[1], "feature mismatch"
@@ -97,7 +96,8 @@ class Network:
         best_acc, best_lay = 0, None
         patience, wait = 5, 0
 
-        for _ in range(epochs):
+        # TODO Nesterov momentum, RMSprop, adam,
+        for e in range(epochs):
             for i in range(0, len(train), batch_size):
                 output = train[i:i+batch_size]
                 for layer in self.layers:
@@ -114,11 +114,11 @@ class Network:
             else:
                 wait += 1
                 if wait >= patience:
-                    print(GREEN + "Early stopping triggered." + RESET)
+                    print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
                     self.layers = best_lay
                     break
     
-        print(f"Best Acc: {best_acc*100:.4f}%")
+        print(f"{GREEN}Best Acc: {PURPLE}{best_acc*100:.4f}%{RESET}")
     
         self.plotMetrics(tmetrics, vmetrics)
 
@@ -126,8 +126,6 @@ class Network:
     def trial():
         try:
             print("For Later")
-            # TODO Nesterov momentum, RMSprop, adam,
-            # * add early stopping when overfitting valF1 score decreases
         except Exception as e:
             print(RED + "Error: " + str(e) + RESET)
             sys.exit(1)
