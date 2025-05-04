@@ -1,4 +1,5 @@
 from .DenseLayer import DenseLayer
+import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
@@ -13,64 +14,109 @@ BLACK = "\033[98m"
 RESET = "\033[0m"
 
 def categoricalCrossentropy(true, pred):
-    logpred = np.log(pred)
-    return sum(t*lp for t,lp in zip(true, logpred))
+    epsilon = 1e-15
+    pred = np.clip(pred, epsilon, 1 - epsilon)
+    return -np.sum(true * np.log(pred)) / true.shape[0]
 
-def onehot(arr, classes):
-    return np.eye(classes)[arr]
 
 class Network:
     """
         Whole Neural Network with Parameters and Layers
     """
 
-    def __init__(self, num_input):
+    def __init__(self, num_input, loss='categoricalCrossentropy'):
         self.num_input = num_input
+        self.loss = loss
         self.layers = []
+        np.random.seed(122)
 
     def addLayer(self, num_nodes, activation='sigmoid'):
         inputs = self.layers[-1].num_nodes if len(self.layers) else self.num_input
         self.layers.append(DenseLayer(inputs, num_nodes, activation))
 
-    def fit(self, train, train_out, val, val_out, loss='categoricalCrossentropy',
-                learningRate=0.01, batch_size=8, epochs=1):
+    def metricize(self, metrics, val, val_out):
+        for layer in self.layers:
+            val = layer.calculate(val)
+        pred = np.argmax(val, axis=1)
+        onehot = np.eye(len(self.mapper))[val_out]
+        metrics['Loss'].append(categoricalCrossentropy(onehot, val))
+        metrics['Acc'].append(np.mean(pred == val_out))
+
+        tp = np.sum((pred == 1) & (val_out == 1))
+        fp = np.sum((pred == 1) & (val_out != 1))
+        fn = np.sum((pred != 1) & (val_out == 1))
+
+        metrics['Recall'].append(tp / (tp + fn + 1e-8))
+        metrics['Prec'].append(tp / (tp + fp + 1e-8))
+        metrics['F1'].append(tp / (tp + (fp + fn) / 2 + 1e-8))
+
+    def plotMetrics(self, tmetrics, vmetrics):
+        fig, axs = plt.subplots(1, 2, figsize=(15, 6))
+
+        axs[0].plot(tmetrics['Acc'], 'g:', label='Train Accuracy')
+        axs[0].plot(vmetrics['Acc'], 'g-', label='Validation Accuracy')
+        axs[0].plot(tmetrics['F1'], 'b:', label='Train F1')
+        axs[0].plot(vmetrics['F1'], 'b-', label='Validation F1')
+        axs[0].axhline(y=1, color='k', linestyle=':')
+        axs[0].set_title('Accuracy')
+        axs[0].legend()
+
+        axs[1].plot(tmetrics['Loss'], 'r:', label='Train Loss')
+        axs[1].plot(vmetrics['Loss'], 'r-', label='Validation Loss')
+        axs[1].set_title('Loss')
+        axs[1].legend()
+
+        plt.tight_layout()
+        fig.canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
+        plt.show()
+
+    def fit(self, train, train_out, val, val_out,
+                learningRate=0.01, batch_size=100, epochs=40):
+                # learningRate=0.01, batch_size=8, epochs=30):
+        assert len(train) == len(train_out), "sample mismatch"
+        assert len(val) == len(val_out), "sample mismatch"
+        assert train.shape[1] == val.shape[1], "feature mismatch"
+        assert np.all(np.isin(val_out, train_out)), "unidentified label found"
+        
+        means = np.average(train, axis=0)
+        stds = np.std(train, axis=0)
+        train = (train - means) / stds
+        val = (val - means) / stds
+
+        unique = np.unique(train_out)
+        self.mapper = {label: i for i, label in enumerate(unique)}
+        train_out = np.array([self.mapper[v] for v in train_out])
+        val_out = np.array([self.mapper[v] for v in val_out])
+
+        tmetrics = {'Loss': [], 'Acc': [], 'Recall': [], 'Prec': [], 'F1': []}
+        vmetrics = {'Loss': [], 'Acc': [], 'Recall': [], 'Prec': [], 'F1': []}
+        self.metricize(tmetrics, train, train_out)
+        self.metricize(vmetrics, val, val_out)
+
+        for _ in range(epochs):
+            for i in range(0, len(train), batch_size):
+                output = train[i:i+batch_size]
+                for layer in self.layers:
+                    output = layer.calculate(output)
+                error = output - np.eye(len(unique))[train_out[i:i+batch_size]]
+                for layer in reversed(self.layers):
+                    error = layer.backprop(error)
+            self.metricize(tmetrics, train, train_out)
+            self.metricize(vmetrics, val, val_out)
+        
+        # for key, value in vmetrics.items():
+        #     if value:
+        #         print(f"{key}: {value[-1]}")
+        # print("Best Acc:", np.max(vmetrics['Acc']))
+    
+        self.plotMetrics(tmetrics, vmetrics)
+
+
+    def trial():
         try:
-            assert len(train) == len(train_out), "sample mismatch"
-            assert len(val) == len(val_out), "sample mismatch"
-            assert train.shape[1] == val.shape[1], "feature mismatch"
-            assert np.all(np.isin(val_out, train_out)), "unidentified label found"
-        
-            means = np.average(train, axis=0)
-            stds = np.std(train, axis=0)
-            train = (train - means) / stds
-            val = (val - means) / stds
-
-            unique = np.unique(train_out)
-            mapper = {label: i for i, label in enumerate(unique)}
-            train_out = np.array([mapper[v] for v in train_out])
-            val_out = np.array([mapper[v] for v in val_out])
-
-
-            for _ in range(epochs): # ! EPOCHS SET TO 1 ONLY
-                for i in range(0, len(train), batch_size):
-                    output = train[i:i+batch_size]
-                    for layer in self.layers:
-                        output = layer.calculate(output)
-
-                    error = output - np.eye(len(unique))[train_out[i:i+batch_size]]
-                    for layer in reversed(self.layers):
-                        error = layer.backprop(error)
-        
-            # for layer in self.layers:
-            #     predictions = layer.calculate(predictions)
-            # predictions = np.argmax(predictions, axis=0)
-
-            # count = 0
-            # for i in range(len(predictions)):
-            #     if predictions[i] == val.iloc[i, 1]:
-            #         count += 1
-            # print("Accuracy: ", count/len(predictions)*100, "%")
-
+            print("For Later")
+            # TODO Nesterov momentum, RMSprop, adam,
+            # * add early stopping when overfitting valF1 score decreases
         except Exception as e:
             print(RED + "Error: " + str(e) + RESET)
             sys.exit(1)

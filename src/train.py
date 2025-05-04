@@ -14,40 +14,6 @@ GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
 
-def epoch(ndata, y, th):
-    # TODO backpropagation and gradient descent
-    # TODO Nesterov momentum, RMSprop, adam,
-    return th - learningRate * grad / m
-
-def trainModel(data, y, headers, n):
-    try:
-        classes = np.unique(y)
-
-        # TODO create the weight matrix
-
-        # * normalize
-
-        maxiterations = 100
-        for i in range(maxiterations): # TODO add tqdm()
-            th = epoch(ndata, y, th)
-            print(f"\rEpoch [{i}/{maxiterations}]",end="")
-
-            # TODO add train_loss, trainF1, val_loss, valF1, accuracy
-
-            # * add early stopping when overfitting valF1 score decreases
-
-        # TODO learning curve graphs: Loss + Accuracy
-        # TODO multiple curves on same graph (models)
-        # TODO history of metrics obtained
-    
-        print(GREEN + "\rModel Trained!" + (" " * 30) + RESET)
-
-        # * denormalize
-
-        return th
-    except Exception as e:
-        print(RED + "Error: " + str(e) + RESET)
-        sys.exit(1)
 
 def loadData(fil):
     try:
@@ -58,6 +24,8 @@ def loadData(fil):
     except Exception as e:
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
+
+from tqdm import tqdm
 
 def main():
     if len(sys.argv) != 3:

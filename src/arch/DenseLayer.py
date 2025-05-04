@@ -6,7 +6,13 @@ from .Perceptron import Perceptron
 # ? NONLINEAR FUNCTIONS
 # * 1. Sigmoid - center: (0,0.5)
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+    out = np.empty_like(x)
+    pos_mask = x >= 0
+    neg_mask = ~pos_mask
+    out[pos_mask] = 1 / (1 + np.exp(-x[pos_mask]))
+    exp_x = np.exp(x[neg_mask])
+    out[neg_mask] = exp_x / (1 + exp_x)
+    return out
 
 def dsigmoid(x):
     return sigmoid(x) * (1 - sigmoid(x))
@@ -20,14 +26,14 @@ def dtanh(x):
 
 # * 3. Rectified Linear Unit 
 def ReLU(x, r=0):
-    return max(r * x, x)
+    return np.max(r * x, x)
 
 def dReLU(x, r=0):
     return 1 if x > 0 else r
 
 # * 4. Exponential Linear Unit
 def ELU(x, alpha=1.67326, lam=1.0507):
-    return lam * max(alpha * (np.exp(x) - 1), x)
+    return lam * np.max(alpha * (np.exp(x) - 1), x)
 
 def dELU(x, alpha=1.67326, lam=1.0507):
     return lam if x > 0 else lam * alpha * np.exp(x) * (np.exp(x) - 1)
@@ -49,8 +55,6 @@ def softplus(x):
 
 def dsoftplus(x):
     return 1 if x > 20 else 1 - sigmoid(-x)
-
-
 
 @dataclass
 class DenseLayer:
@@ -100,8 +104,10 @@ class DenseLayer:
         error: array storing errors of each node
         """
         assert error.shape[1] == self.num_nodes, "shape mismatch"
-        newerr = np.array([])
+
+        newerr = []
         for i,p in enumerate(self.perceps):
-            np.append(newerr, p.backprop(error[:,i], self.dfunc))
-        return newerr.T
+            newerr.append(p.backprop(error[:,i], self.dfunc))
+        newerr = np.sum(np.array(newerr), axis=0)
+        return newerr
         

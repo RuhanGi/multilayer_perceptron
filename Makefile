@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "Restructure"
+	git commit -m "plot"
 	git push
 
 re: fclean all
