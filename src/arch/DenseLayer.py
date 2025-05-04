@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 import numpy as np
-from .Perceptron import Perceptron
-
 
 # ? NONLINEAR FUNCTIONS
 # * 1. Sigmoid - center: (0,0.5)
@@ -26,17 +24,17 @@ def dtanh(x):
 
 # * 3. Rectified Linear Unit 
 def ReLU(x, r=0):
-    return np.max(r * x, x)
+    return np.maximum(r * x, x)
 
 def dReLU(x, r=0):
-    return 1 if x > 0 else r
+    return np.where(x > 0, 1, r)
 
 # * 4. Exponential Linear Unit
 def ELU(x, alpha=1.67326, lam=1.0507):
-    return lam * np.max(alpha * (np.exp(x) - 1), x)
+    return lam * np.maximum(alpha * (np.exp(x) - 1), x)
 
 def dELU(x, alpha=1.67326, lam=1.0507):
-    return lam if x > 0 else lam * alpha * np.exp(x) * (np.exp(x) - 1)
+    return lam * np.where(x > 0, 1, alpha * np.exp(x) * (np.exp(x) - 1))
 
 # * Linear - no change
 def linear(z):
@@ -90,24 +88,24 @@ class DenseLayer:
         }
         self.func = funcy[self.act]
         self.dfunc = dfuncy[self.act]
-        self.perceps = np.array(
-            [Perceptron(self.num_input) for _ in range(self.num_nodes)],
-            dtype=object
-        )
+        limit = np.sqrt(6 / self.num_input)
+        self.weights = np.random.uniform(-limit, limit, (self.num_input, self.num_nodes))
+        self.weights = np.vstack([self.weights, np.zeros(self.num_nodes)])
 
     def calculate(self, input):
-        self.output = self.func(np.array([p.calculate(input) for p in self.perceps]))
-        return self.output.T
+        self.input = np.hstack([input, np.ones((input.shape[0], 1))])
+        self.z = np.dot(self.input, self.weights)
+        self.output = self.func(self.z)
+        return self.output
 
-    def backprop(self, error):
+    def backprop(self, error, learningRate):
         """
         error: array storing errors of each node
         """
         assert error.shape[1] == self.num_nodes, "shape mismatch"
 
-        newerr = []
-        for i,p in enumerate(self.perceps):
-            newerr.append(p.backprop(error[:,i], self.dfunc))
-        newerr = np.sum(np.array(newerr), axis=0)
-        return newerr
+        grad = error * self.dfunc(self.z)
+        self.weights -= learningRate * self.input.T @ grad
+        return grad @ self.weights[:-1].T
+
         

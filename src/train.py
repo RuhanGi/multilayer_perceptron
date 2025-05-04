@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import sys
 
-
 RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -14,7 +13,6 @@ GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
 
-
 def loadData(fil):
     try:
         df = pd.read_csv(fil, header=None)
@@ -24,8 +22,6 @@ def loadData(fil):
     except Exception as e:
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
-
-from tqdm import tqdm
 
 def main():
     if len(sys.argv) != 3:

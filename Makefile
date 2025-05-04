@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "plot"
+	git commit -m "removed Perceptron class"
 	git push
 
 re: fclean all

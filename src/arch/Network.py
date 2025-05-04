@@ -29,7 +29,7 @@ class Network:
         self.num_input = num_input
         self.loss = loss
         self.layers = []
-        np.random.seed(122)
+        np.random.seed(8716)
 
     def addLayer(self, num_nodes, activation='sigmoid'):
         inputs = self.layers[-1].num_nodes if len(self.layers) else self.num_input
@@ -72,7 +72,7 @@ class Network:
         plt.show()
 
     def fit(self, train, train_out, val, val_out,
-                learningRate=0.01, batch_size=100, epochs=40):
+                learningRate=0.01, batch_size=100, epochs=400):
         assert len(train) == len(train_out), "sample mismatch"
         assert len(val) == len(val_out), "sample mismatch"
         assert train.shape[1] == val.shape[1], "feature mismatch"
@@ -99,28 +99,33 @@ class Network:
         # TODO Nesterov momentum, RMSprop, adam,
         for e in range(epochs):
             for i in range(0, len(train), batch_size):
+
                 output = train[i:i+batch_size]
                 for layer in self.layers:
                     output = layer.calculate(output)
+            
                 error = output - np.eye(len(unique))[train_out[i:i+batch_size]]
                 for layer in reversed(self.layers):
-                    error = layer.backprop(error)
+                    error = layer.backprop(error, learningRate)
+    
             self.metricize(tmetrics, train, train_out)
             self.metricize(vmetrics, val, val_out)
             if vmetrics['Acc'][-1] > best_acc:
                 best_acc = vmetrics['Acc'][-1]
-                best_lay = copy.deepcopy(self.layers)
-                wait = 0
-            else:
-                wait += 1
-                if wait >= patience:
-                    print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
-                    self.layers = best_lay
-                    break
+                # best_lay = copy.deepcopy(self.layers)
+            #     wait = 0
+            # else:
+            #     wait += 1
+            #     if wait >= patience:
+            #         print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
+            #         self.layers = best_lay
+            #         break
     
         print(f"{GREEN}Best Acc: {PURPLE}{best_acc*100:.4f}%{RESET}")
     
         self.plotMetrics(tmetrics, vmetrics)
+    
+        return best_acc
 
 
     def trial():
