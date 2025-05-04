@@ -14,9 +14,9 @@ GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
 
-def binaryCross(true, pred, epsilon=1e-12):
-    pred = np.clip(pred, epsilon, 1 - epsilon)  # Prevent log(0)
-    return -np.mean(true * np.log(pred) + (1 - true) * np.log(1 - pred))
+def binaryCross(true, pred):
+    assert len(true) == len(pred), "length mismatch"
+    return -np.mean(true * np.log(pred) + (1-true) * np.log(1-pred))
 
 def categoricalCrossentropy(true, pred):
     epsilon = 1e-15
@@ -44,7 +44,7 @@ class Network:
         pred = np.argmax(val, axis=1)
         # onehot = np.eye(len(self.mapper))[val_out]
         # metrics['Loss'].append(categoricalCrossentropy(onehot, val))
-        metrics['Loss'].append(binaryCross(val_out, val))
+        metrics['Loss'].append(binaryCross(val_out, val[:,1]))
         metrics['Acc'].append(np.mean(pred == val_out))
 
         tp = np.sum((pred == 1) & (val_out == 1))
@@ -54,26 +54,6 @@ class Network:
         metrics['Recall'].append(tp / (tp + fn + 1e-8))
         metrics['Prec'].append(tp / (tp + fp + 1e-8))
         metrics['F1'].append(tp / (tp + (fp + fn) / 2 + 1e-8))
-
-    def plotMetrics(self, tmetrics, vmetrics):
-        fig, axs = plt.subplots(1, 2, figsize=(15, 6))
-
-        axs[0].plot(tmetrics['Acc'], 'g:', label='Train Accuracy')
-        axs[0].plot(vmetrics['Acc'], 'g-', label='Validation Accuracy')
-        axs[0].plot(tmetrics['F1'], 'b:', label='Train F1')
-        axs[0].plot(vmetrics['F1'], 'b-', label='Validation F1')
-        axs[0].axhline(y=1, color='k', linestyle=':')
-        axs[0].set_title('Accuracy')
-        axs[0].legend()
-
-        axs[1].plot(tmetrics['Loss'], 'r:', label='Train Loss')
-        axs[1].plot(vmetrics['Loss'], 'r-', label='Validation Loss')
-        axs[1].set_title('Loss')
-        axs[1].legend()
-
-        plt.tight_layout()
-        fig.canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
-        plt.show()
 
     def fit(self, train, train_out, val, val_out,
                 learningRate=0.01, batch_size=100, epochs=400):
@@ -131,8 +111,27 @@ class Network:
     
         return best_acc
 
+    def plotMetrics(self, tmetrics, vmetrics):
+        fig, axs = plt.subplots(1, 2, figsize=(15, 6))
 
-    def trial():
+        axs[0].plot(tmetrics['Acc'], 'g:', label='Train Accuracy')
+        axs[0].plot(vmetrics['Acc'], 'g-', label='Validation Accuracy')
+        axs[0].plot(tmetrics['F1'], 'b:', label='Train F1')
+        axs[0].plot(vmetrics['F1'], 'b-', label='Validation F1')
+        axs[0].axhline(y=1, color='k', linestyle=':')
+        axs[0].set_title('Accuracy')
+        axs[0].legend()
+
+        axs[1].plot(tmetrics['Loss'], 'r:', label='Train Loss')
+        axs[1].plot(vmetrics['Loss'], 'r-', label='Validation Loss')
+        axs[1].set_title('Loss')
+        axs[1].legend()
+
+        plt.tight_layout()
+        fig.canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
+        plt.show()
+
+    def trial(): #TODO put this in fit function
         try:
             print("For Later")
         except Exception as e:
