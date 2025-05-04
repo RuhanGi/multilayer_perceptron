@@ -1,6 +1,7 @@
 from .DenseLayer import DenseLayer
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
 import sys
 
 RED = "\033[91m"
@@ -93,6 +94,9 @@ class Network:
         self.metricize(tmetrics, train, train_out)
         self.metricize(vmetrics, val, val_out)
 
+        best_acc, best_lay = 0, None
+        patience, wait = 5, 0
+
         for _ in range(epochs):
             for i in range(0, len(train), batch_size):
                 output = train[i:i+batch_size]
@@ -103,11 +107,18 @@ class Network:
                     error = layer.backprop(error)
             self.metricize(tmetrics, train, train_out)
             self.metricize(vmetrics, val, val_out)
-        
-        # for key, value in vmetrics.items():
-        #     if value:
-        #         print(f"{key}: {value[-1]}")
-        # print("Best Acc:", np.max(vmetrics['Acc']))
+            if vmetrics['Acc'][-1] > best_acc:
+                best_acc = vmetrics['Acc'][-1]
+                best_lay = copy.deepcopy(self.layers)
+                wait = 0
+            else:
+                wait += 1
+                if wait >= patience:
+                    print(GREEN + "Early stopping triggered." + RESET)
+                    self.layers = best_lay
+                    break
+    
+        print(f"Best Acc: {best_acc*100:.4f}%")
     
         self.plotMetrics(tmetrics, vmetrics)
 
