@@ -14,9 +14,9 @@ GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
 
-def binaryCross(true, pred):
-    assert len(true) == len(pred), "length mismatch"
-    return -np.mean([y*np.log(p) + (1-y)*np.log(1-p) for y, p in zip(true, pred)])
+def binaryCross(true, pred, epsilon=1e-12):
+    pred = np.clip(pred, epsilon, 1 - epsilon)  # Prevent log(0)
+    return -np.mean(true * np.log(pred) + (1 - true) * np.log(1 - pred))
 
 def categoricalCrossentropy(true, pred):
     epsilon = 1e-15
