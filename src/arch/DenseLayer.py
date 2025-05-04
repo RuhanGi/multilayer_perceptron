@@ -79,7 +79,7 @@ class DenseLayer:
             'softplus' : (softplus, dsoftplus)
         }
         self.func = funcy[self.act][0]
-        self.dfunc = dfuncy[self.act][1]
+        self.dfunc = funcy[self.act][1]
         limit = np.sqrt(6 / self.num_input)
         self.weights = np.random.uniform(-limit, limit, (self.num_input, self.num_nodes))
         self.weights = np.vstack([self.weights, np.zeros(self.num_nodes)])
