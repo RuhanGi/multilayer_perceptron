@@ -15,7 +15,8 @@ BLACK = "\033[98m"
 RESET = "\033[0m"
 
 def binaryCross(true, pred):
-
+    assert len(true) == len(pred), "length mismatch"
+    return -np.mean([y*np.log(p) + (1-y)*np.log(1-p) for y, p in zip(true, pred)])
 
 def categoricalCrossentropy(true, pred):
     epsilon = 1e-15
@@ -44,7 +45,6 @@ class Network:
         # onehot = np.eye(len(self.mapper))[val_out]
         # metrics['Loss'].append(categoricalCrossentropy(onehot, val))
         metrics['Loss'].append(binaryCross(val_out, val))
-        print(val.shape)
         metrics['Acc'].append(np.mean(pred == val_out))
 
         tp = np.sum((pred == 1) & (val_out == 1))
