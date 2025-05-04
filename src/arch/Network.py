@@ -17,8 +17,7 @@ RESET = "\033[0m"
 def categoricalCrossentropy(true, pred):
     epsilon = 1e-15
     pred = np.clip(pred, epsilon, 1 - epsilon)
-    return -np.sum(true * np.log(pred)) / true.shape[0]
-
+    return -np.mean(np.sum(true * np.log(pred), axis=1))
 
 class Network:
     """

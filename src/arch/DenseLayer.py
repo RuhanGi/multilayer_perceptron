@@ -71,23 +71,15 @@ class DenseLayer:
 
     def __post_init__(self):
         funcy = {
-            'sigmoid' : sigmoid,
-            'tanh' : tanh,
-            'ReLU' : ReLU,
-            'ELU' : ELU,
-            'softmax' : softmax,
-            'softplus' : softplus
+            'sigmoid' : (sigmoid, dsigmoid),
+            'tanh' : (tanh, dtanh),
+            'ReLU' : (ReLU, dReLU),
+            'ELU' : (ELU, dELU),
+            'softmax' : (softmax, dlinear),
+            'softplus' : (softplus, dsoftplus)
         }
-        dfuncy = {
-            'sigmoid' : dsigmoid,
-            'tanh' : dtanh,
-            'ReLU' : dReLU,
-            'ELU' : dELU,
-            'softmax' : dlinear,
-            'softplus' : dsoftplus
-        }
-        self.func = funcy[self.act]
-        self.dfunc = dfuncy[self.act]
+        self.func = funcy[self.act][0]
+        self.dfunc = dfuncy[self.act][1]
         limit = np.sqrt(6 / self.num_input)
         self.weights = np.random.uniform(-limit, limit, (self.num_input, self.num_nodes))
         self.weights = np.vstack([self.weights, np.zeros(self.num_nodes)])
