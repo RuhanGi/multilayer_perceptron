@@ -107,5 +107,3 @@ class DenseLayer:
         grad = error * self.dfunc(self.z)
         self.weights -= learningRate * self.input.T @ grad
         return grad @ self.weights[:-1].T
-
-        
