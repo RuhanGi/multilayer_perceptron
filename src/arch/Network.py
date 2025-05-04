@@ -112,14 +112,14 @@ class Network:
             self.metricize(vmetrics, val, val_out)
             if vmetrics['Acc'][-1] > best_acc:
                 best_acc = vmetrics['Acc'][-1]
-                # best_lay = copy.deepcopy(self.layers)
-            #     wait = 0
-            # else:
-            #     wait += 1
-            #     if wait >= patience:
-            #         print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
-            #         self.layers = best_lay
-            #         break
+                best_lay = copy.deepcopy(self.layers)
+                wait = 0
+            else:
+                wait += 1
+                if wait >= patience:
+                    print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
+                    self.layers = best_lay
+                    break
     
         print(f"{GREEN}Best Acc: {PURPLE}{best_acc*100:.4f}%{RESET}")
     
