@@ -28,11 +28,11 @@ class Network:
         Whole Neural Network with Parameters and Layers
     """
 
-    def __init__(self, num_input, loss='categoricalCrossentropy'):
+    def __init__(self, num_input, loss='categoricalCrossentropy', seed=8716):
         self.num_input = num_input
         self.loss = loss
         self.layers = []
-        np.random.seed(8716)
+        np.random.seed(seed)
 
     def addLayer(self, num_nodes, activation='sigmoid'):
         inputs = self.layers[-1].num_nodes if len(self.layers) else self.num_input
@@ -56,7 +56,7 @@ class Network:
         metrics['F1'].append(tp / (tp + (fp + fn) / 2 + 1e-8))
 
     def fit(self, train, train_out, val, val_out,
-                learningRate=0.01, batch_size=100, epochs=400):
+                learningRate=0.01, batch_size=8, epochs=400):
         assert len(train) == len(train_out), "sample mismatch"
         assert len(val) == len(val_out), "sample mismatch"
         assert train.shape[1] == val.shape[1], "feature mismatch"
@@ -78,9 +78,8 @@ class Network:
         self.metricize(vmetrics, val, val_out)
 
         best_acc, best_lay = 0, None
-        patience, wait = 5, 0
+        patience, wait = 10, 0
 
-        # TODO Nesterov momentum, RMSprop, adam,
         for e in range(epochs):
             for i in range(0, len(train), batch_size):
 
@@ -101,13 +100,12 @@ class Network:
             else:
                 wait += 1
                 if wait >= patience:
-                    print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
-                    self.layers = best_lay
+                    # print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
                     break
+        self.layers = best_lay
+        # print(f"{GREEN}Best Acc: {PURPLE}{best_acc*100:.4f}%{RESET}")
     
-        print(f"{GREEN}Best Acc: {PURPLE}{best_acc*100:.4f}%{RESET}")
-    
-        self.plotMetrics(tmetrics, vmetrics)
+        # self.plotMetrics(tmetrics, vmetrics)
     
         return best_acc
 

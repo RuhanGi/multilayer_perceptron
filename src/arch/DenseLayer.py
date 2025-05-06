@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 import numpy as np
 
-# ? NONLINEAR FUNCTIONS
-# * 1. Sigmoid - center: (0,0.5)
 def sigmoid(x):
     out = np.empty_like(x)
     pos_mask = x >= 0
@@ -15,28 +13,24 @@ def sigmoid(x):
 def dsigmoid(x):
     return sigmoid(x) * (1 - sigmoid(x))
 
-# * 2. Hyperbolic Tangent
 def tanh(x):
     return 2 * sigmoid(2 * x) - 1
 
 def dtanh(x):
     return 4 * dsigmoid(2 * x)
 
-# * 3. Rectified Linear Unit 
 def ReLU(x, r=0):
     return np.maximum(r * x, x)
 
 def dReLU(x, r=0):
     return np.where(x > 0, 1, r)
 
-# * 4. Exponential Linear Unit
 def ELU(x, alpha=1.67326, lam=1.0507):
     return lam * np.maximum(alpha * (np.exp(x) - 1), x)
 
 def dELU(x, alpha=1.67326, lam=1.0507):
     return lam * np.where(x > 0, 1, alpha * np.exp(x) * (np.exp(x) - 1))
 
-# * Linear - no change
 def linear(z):
     return z
 
@@ -47,7 +41,6 @@ def softmax(z):
     exp = np.exp(z - np.max(z, axis=0, keepdims=True))
     return exp / np.sum(exp, axis=0, keepdims=True)
 
-# * 2. Softplus
 def softplus(x):
     return x if x > 20 else np.log(1 + np.exp(x))
 
@@ -81,8 +74,7 @@ class DenseLayer:
         self.func = funcy[self.act][0]
         self.dfunc = funcy[self.act][1]
         limit = np.sqrt(6 / self.num_input)
-        self.weights = np.random.uniform(-limit, limit, (self.num_input, self.num_nodes))
-        self.weights = np.vstack([self.weights, np.zeros(self.num_nodes)])
+        self.weights = np.random.uniform(-limit, limit, (self.num_input+1, self.num_nodes))
 
     def calculate(self, input):
         self.input = np.hstack([input, np.ones((input.shape[0], 1))])
@@ -91,9 +83,6 @@ class DenseLayer:
         return self.output
 
     def backprop(self, error, learningRate):
-        """
-        error: array storing errors of each node
-        """
         assert error.shape[1] == self.num_nodes, "shape mismatch"
 
         grad = error * self.dfunc(self.z)

@@ -98,9 +98,9 @@ def main():
     features = df.columns[2:]
     df[features] = (df[features] - df[features].mean()) / df[features].std()
     df[1] = df[1].map({'M': 1, 'B': 0})
-    # plotData(df)
+    plotData(df)
     # plot_correlation_matrix(df)
-    plotFunc(df)
+    # plotFunc(df)
 
 
 if __name__ == "__main__":

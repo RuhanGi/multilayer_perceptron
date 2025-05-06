@@ -16,6 +16,7 @@ RESET = "\033[0m"
 def loadData(fil):
     try:
         df = pd.read_csv(fil, header=None)
+        df.dropna(inplace=True)
         train = np.array(df.iloc[:, 2:])
         train_out = np.array(df.iloc[:,1])
         return train, train_out
@@ -33,11 +34,28 @@ def main():
     train, train_out = loadData(sys.argv[1])
     val, val_out = loadData(sys.argv[2])
 
-    n = Network(train.shape[1])
-    n.addLayer(24)
-    n.addLayer(15)
-    n.addLayer(2, activation='softmax')
-    n.fit(train, train_out, val, val_out)
+    # TODO initialize with inputs/outputs, softmax FORCED output layer
+    # TODO investigate trainF1 score not improving over time
+    # TODO prediction program
+    # TODO Nesterov momentum, RMSprop, adam / compare different models in same graph
+
+    accs = []
+    k = 20
+    bs, ba, bn = 0,0, None
+    offset = np.random.randint(10**5)
+    for i in range(offset, offset+k):
+        n = Network(train.shape[1], seed=i)
+        n.addLayer(24)
+        n.addLayer(15)
+        n.addLayer(2, activation='softmax')
+        acc = n.fit(train, train_out, val, val_out)
+        print(GRAY + f"\rModel: {i-offset}/{k}", end="")
+        accs.append(acc)
+        if acc > ba:
+            bs, ba, bn = i, acc, n
+
+    print(BLUE + f"\rBest Accuracy: {PURPLE}{ba*100:.4f}%{BLUE} by Seed {i}" + RESET)
+    print(f"{GREEN}{k}-Fold Acc: {PURPLE}{np.average(accs)*100:.4f}%{RESET}")
 
 
 if __name__ == "__main__":
