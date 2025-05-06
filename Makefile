@@ -41,7 +41,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "Predict Program"
+	git commit -m "Eval"
 	git push
 
 re: fclean all
