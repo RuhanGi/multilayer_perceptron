@@ -37,7 +37,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "removed Perceptron class"
+	git commit -m "I/O in Constructor"
 	git push
 
 re: fclean all

@@ -28,21 +28,38 @@ class Network:
         Whole Neural Network with Parameters and Layers
     """
 
-    def __init__(self, num_input, loss='categoricalCrossentropy', seed=8716):
-        self.num_input = num_input
-        self.loss = loss
+    def __init__(self, train, train_out, val, val_out, seed=8716):
+        assert len(train) == len(train_out), "sample mismatch"
+        assert len(val) == len(val_out), "sample mismatch"
+        assert train.shape[1] == val.shape[1], "feature mismatch"
+        assert np.all(np.isin(val_out, train_out)), "unidentified label found"
+
+        means = np.average(train, axis=0)
+        stds = np.std(train, axis=0)
+        train = (train - means) / stds
+        val = (val - means) / stds
+
+        unique = np.unique(train_out)
+        self.mapper = {label: i for i, label in enumerate(unique)}
+        train_out = np.array([self.mapper[v] for v in train_out])
+        val_out = np.array([self.mapper[v] for v in val_out])
+
+        self.train = train
+        self.train_out = train_out
+        self.val = val
+        self.val_out = val_out
+
         self.layers = []
         np.random.seed(seed)
 
     def addLayer(self, num_nodes, activation='sigmoid'):
-        inputs = self.layers[-1].num_nodes if len(self.layers) else self.num_input
-        self.layers.append(DenseLayer(inputs, num_nodes, activation))
+        num_input = self.train.shape[1] if len(self.layers) == 0 else self.layers[-1].num_nodes
+        self.layers.append(DenseLayer(num_input, num_nodes, activation))
 
     def metricize(self, metrics, val, val_out):
         for layer in self.layers:
             val = layer.calculate(val)
         pred = np.argmax(val, axis=1)
-        # onehot = np.eye(len(self.mapper))[val_out]
         # metrics['Loss'].append(categoricalCrossentropy(onehot, val))
         metrics['Loss'].append(binaryCross(val_out, val[:,1]))
         metrics['Acc'].append(np.mean(pred == val_out))
@@ -55,44 +72,29 @@ class Network:
         metrics['Prec'].append(tp / (tp + fp + 1e-8))
         metrics['F1'].append(tp / (tp + (fp + fn) / 2 + 1e-8))
 
-    def fit(self, train, train_out, val, val_out,
-                learningRate=0.01, batch_size=8, epochs=400):
-        assert len(train) == len(train_out), "sample mismatch"
-        assert len(val) == len(val_out), "sample mismatch"
-        assert train.shape[1] == val.shape[1], "feature mismatch"
-        assert np.all(np.isin(val_out, train_out)), "unidentified label found"
-        
-        means = np.average(train, axis=0)
-        stds = np.std(train, axis=0)
-        train = (train - means) / stds
-        val = (val - means) / stds
-
-        unique = np.unique(train_out)
-        self.mapper = {label: i for i, label in enumerate(unique)}
-        train_out = np.array([self.mapper[v] for v in train_out])
-        val_out = np.array([self.mapper[v] for v in val_out])
-
+    def fit(self, learningRate=0.01, batch_size=8, epochs=400):
+        self.addLayer(len(self.mapper), 'softmax')
+    
         tmetrics = {'Loss': [], 'Acc': [], 'Recall': [], 'Prec': [], 'F1': []}
         vmetrics = {'Loss': [], 'Acc': [], 'Recall': [], 'Prec': [], 'F1': []}
-        self.metricize(tmetrics, train, train_out)
-        self.metricize(vmetrics, val, val_out)
+        self.metricize(tmetrics, self.train, self.train_out)
+        self.metricize(vmetrics, self.val, self.val_out)
 
         best_acc, best_lay = 0, None
         patience, wait = 10, 0
 
         for e in range(epochs):
-            for i in range(0, len(train), batch_size):
-
-                output = train[i:i+batch_size]
+            for i in range(0, len(self.train), batch_size):
+                output = self.train[i:i+batch_size]
                 for layer in self.layers:
                     output = layer.calculate(output)
-            
-                error = output - np.eye(len(unique))[train_out[i:i+batch_size]]
+        
+                error = output - np.eye(len(self.mapper))[self.train_out[i:i+batch_size]]
                 for layer in reversed(self.layers):
                     error = layer.backprop(error, learningRate)
     
-            self.metricize(tmetrics, train, train_out)
-            self.metricize(vmetrics, val, val_out)
+            self.metricize(tmetrics, self.train, self.train_out)
+            self.metricize(vmetrics, self.val, self.val_out)
             if vmetrics['Acc'][-1] > best_acc:
                 best_acc = vmetrics['Acc'][-1]
                 best_lay = copy.deepcopy(self.layers)
@@ -103,9 +105,8 @@ class Network:
                     # print(YELLOW + f"Early stopping triggered at Epoch {e}/{epochs}" + RESET)
                     break
         self.layers = best_lay
-        # print(f"{GREEN}Best Acc: {PURPLE}{best_acc*100:.4f}%{RESET}")
     
-        # self.plotMetrics(tmetrics, vmetrics)
+        self.plotMetrics(tmetrics, vmetrics)
     
         return best_acc
 

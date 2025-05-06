@@ -34,28 +34,34 @@ def main():
     train, train_out = loadData(sys.argv[1])
     val, val_out = loadData(sys.argv[2])
 
-    # TODO initialize with inputs/outputs, softmax FORCED output layer
     # TODO investigate trainF1 score not improving over time
     # TODO prediction program
     # TODO Nesterov momentum, RMSprop, adam / compare different models in same graph
 
-    accs = []
-    k = 20
-    bs, ba, bn = 0,0, None
-    offset = np.random.randint(10**5)
-    for i in range(offset, offset+k):
-        n = Network(train.shape[1], seed=i)
+    single = True
+    if single:
+        n = Network(train, train_out, val, val_out)
         n.addLayer(24)
         n.addLayer(15)
-        n.addLayer(2, activation='softmax')
-        acc = n.fit(train, train_out, val, val_out)
-        print(GRAY + f"\rModel: {i-offset}/{k}", end="")
-        accs.append(acc)
-        if acc > ba:
-            bs, ba, bn = i, acc, n
+        acc = n.fit()
+        print(BLUE + f"Accuracy: {PURPLE}{acc*100:.4f}%" + RESET)
+    else:
+        accs = []
+        k = 20
+        bs, ba, bn = 0,0, None
+        offset = np.random.randint(10**5)
+        for i in range(offset, offset+k):
+            n = Network(train, train_out, val, val_out, seed=i)
+            n.addLayer(24)
+            n.addLayer(15)
+            acc = n.fit()
+            print(GRAY + f"\rModel: {i-offset}/{k}", end="")
+            accs.append(acc)
+            if acc > ba:
+                bs, ba, bn = i, acc, n
 
-    print(BLUE + f"\rBest Accuracy: {PURPLE}{ba*100:.4f}%{BLUE} by Seed {i}" + RESET)
-    print(f"{GREEN}{k}-Fold Acc: {PURPLE}{np.average(accs)*100:.4f}%{RESET}")
+        print(BLUE + f"\rBest Accuracy: {PURPLE}{ba*100:.4f}%{BLUE} by Seed {i}" + RESET)
+        print(f"{GREEN}{k}-Fold Acc: {PURPLE}{np.average(accs)*100:.4f}%{RESET}")
 
 
 if __name__ == "__main__":
