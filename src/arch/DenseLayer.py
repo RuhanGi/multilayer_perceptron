@@ -75,6 +75,8 @@ class DenseLayer:
         self.dfunc = funcy[self.act][1]
         limit = np.sqrt(6 / self.num_input)
         self.weights = np.random.uniform(-limit, limit, (self.num_input+1, self.num_nodes))
+        self.velocity = np.zeros_like(self.weights)
+        self.momentum = np.zeros_like(self.weights)
 
     def calculate(self, input):
         self.input = np.hstack([input, np.ones((input.shape[0], 1))])
@@ -84,7 +86,29 @@ class DenseLayer:
 
     def backprop(self, error, learningRate):
         assert error.shape[1] == self.num_nodes, "shape mismatch"
-
         grad = error * self.dfunc(self.z)
         self.weights -= learningRate * self.input.T @ grad
+        return grad @ self.weights[:-1].T
+    
+    def adambackprop(self, error, learningRate):
+        assert error.shape[1] == self.num_nodes, "shape mismatch"
+        grad = error * self.dfunc(self.z)
+        delt = self.input.T @ grad
+
+        decay1, decay2, epsilon = 0.9, 0.99, 10**-8
+        self.momentum = decay1 * self.momentum + (1-decay1) * delt
+        self.velocity = decay2 * self.velocity + (1-decay2) * delt**2
+
+        self.weights -= learningRate * self.momentum / (np.sqrt(self.velocity) + epsilon)
+        return grad @ self.weights[:-1].T
+    
+    def rmsbackprop(self, error, learningRate):
+        assert error.shape[1] == self.num_nodes, "shape mismatch"
+        grad = error * self.dfunc(self.z)
+        delt = self.input.T @ grad
+
+        decay, epsilon = 0.95, 10**-8
+        self.velocity = decay * self.velocity + (1-decay) * delt**2
+
+        self.weights -= learningRate * delt / (np.sqrt(self.velocity) + epsilon)
         return grad @ self.weights[:-1].T

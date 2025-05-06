@@ -19,25 +19,29 @@ check:
 		fi; \
 	done
 
-a:
-	python3 $(SRCDIR)/main.py data/data.csv
+v:
+	python3 $(SRCDIR)/visual.py data/data.csv
 
 t:
 	python3 $(SRCDIR)/train.py data/train.csv data/val.csv
+
+p:
+	python3 $(SRCDIR)/predict.py data/val.csv adamn.pkl
+
 
 gen:
 	python3 $(SRCDIR)/split.py data/data.csv
 
 clean:
 	find . \( -name "__pycache__" -o -name ".DS_Store" \) -print0 | xargs -0 rm -rf
-	rm -rf data/train.csv data/val.csv
+	rm -rf data/train.csv data/val.csv adamn.pkl
 
 fclean: clean
 	find . -name .DS_Store -delete
 
 gpush: fclean
 	git add .
-	git commit -m "I/O in Constructor"
+	git commit -m "Predict Program"
 	git push
 
 re: fclean all
