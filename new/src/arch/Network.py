@@ -1,4 +1,4 @@
-from .DenseLayer import DenseLayer
+# from .DenseLayer import DenseLayer
 import sys
 
 RED = "\033[91m"
@@ -11,8 +11,13 @@ GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
 
-@dataclass
 class Network:
     """
         Whole Neural Network with Parameters and Layers
     """
+
+    def __init__(self, train, train_out):
+        limit = np.sqrt(6 / num_input)
+        self.weights = np.random.uniform(-limit, limit, (num_input+1, num_nodes))
+        self.func, self.dfunc = af.getFunc(act)
+
