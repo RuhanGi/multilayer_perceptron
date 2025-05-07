@@ -1,4 +1,4 @@
-import actfunc as af
+from actfunc import *
 import numpy as np
 
 # ! Might Delete if passing in learningRate backprop

@@ -1,4 +1,5 @@
-# from .DenseLayer import DenseLayer
+from .DenseLayer import DenseLayer
+import numpy as np
 import sys
 
 RED = "\033[91m"
@@ -17,7 +18,25 @@ class Network:
     """
 
     def __init__(self, train, train_out):
-        limit = np.sqrt(6 / num_input)
-        self.weights = np.random.uniform(-limit, limit, (num_input+1, num_nodes))
-        self.func, self.dfunc = af.getFunc(act)
+        self.means = np.average(train, axis=0)
+        self.stds = np.std(train, axis=0)
+        self.train = self.normalize(train)
 
+        num_inputs = train.shape[0]
+        self.layers = [DenseLayer(num_inputs, num_inputs, 'sigmoid')]
+        # ! EXPERIMENTING WITH ADDING INPUT LAYER
+        # self.layers = []
+
+    def normalize(self, inputs):
+        assert len(self.means) == inputs.shape[1], "shape mismatch"
+        assert len(self.stds) == inputs.shape[1], "shape mismatch"
+        return (inputs - self.means) / self.stds
+
+    def addLayer(self, num_nodes, act='sigmoid'):
+        layer = DenseLayer(self.layers[-1].weights.shape[1], num_nodes, act)
+        self.layers.append(layer)
+
+    def calculate(self, passer):
+        for layer in self.layers:
+            passer = layer.calculate(passer)
+        return passer

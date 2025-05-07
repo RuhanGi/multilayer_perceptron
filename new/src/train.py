@@ -42,8 +42,9 @@ def main():
     train, train_out = loadData(sys.argv[1])
     val, val_out = loadData(sys.argv[2])
 
-    print(type(train))
     n = Network(train, train_out)
+    
+    print(n.calculate())
 
 if __name__ == "__main__":
     main()
