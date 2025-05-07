@@ -80,7 +80,7 @@ class DenseLayer:
 
     def calculate(self, input):
         self.input = np.hstack([input, np.ones((input.shape[0], 1))])
-        self.z = np.dot(self.input, self.weights)
+        self.z = self.input @ self.weights
         self.output = self.func(self.z)
         return self.output
 
