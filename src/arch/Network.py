@@ -4,6 +4,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import copy
 
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+PURPLE = "\033[95m"
+CYAN = "\033[96m"
+GRAY = "\033[97m"
+BLACK = "\033[98m"
+RESET = "\033[0m"
+
+def plotMetric(y, c, what):
+        plt.plot(y, color=c, label=what)
+        plt.ylim(0, int(np.max(y)+1))
+        plt.tight_layout()
+        plt.gcf().canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
+        plt.show()
+
 class Network:
     """
         Whole Neural Network with Parameters and Layers
@@ -51,13 +68,6 @@ class Network:
             passer = layer.backprop(passer, learningRate)
         return passer
 
-    def plotMetric(self, y, c, what):
-        plt.plot(y, color=c, label=what)
-        plt.ylim(0, int(np.max(y)+1))
-        plt.tight_layout()
-        plt.gcf().canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
-        plt.show()
-
     def metricize(self, val, one_hot, metrics, lFunc):
         tprob = self.forward(self.train)
         vprob = self.forward(val)
@@ -81,6 +91,10 @@ class Network:
 
         # TODO more metrics
 
+    def error(self, probs, one_hot):
+        assert probs.shape == one_hot.shape, "shape mismatch"
+        return probs - one_hot
+
     def fit(self, val, val_out, plot=False, epochs=400, loss='crossEntropy',
              batch_size=8,learningRate=0.01, optimizer='minibatch'):
 
@@ -91,7 +105,7 @@ class Network:
         self.addLayer(len(self.mapper), act='softmax')
         val = self.normalize(val)
         one_hot = self.makeOnehot(val_out)
-        lFunc, dlFunc = getLoss(loss)
+        lFunc = getLoss(loss)
 
         metrics = {
             "Train": {'Loss': [], 'Acc': [], 'Recall': [], 'Prec': [], 'F1': []},
@@ -105,9 +119,12 @@ class Network:
         for e in range(epochs):
             for i in range(0, len(self.train), batch_size):
                 probs = self.forward(self.train[i:i+batch_size])
-                dLdp = dlFunc(probs, self.train_hot[i:i+batch_size])
+                dLdp = self.error(probs, self.train_hot[i:i+batch_size])
                 self.backprop(dLdp, learningRate)
             self.metricize(val, one_hot, metrics, lFunc)
+            print(f"{YELLOW}\rEpoch {e}/{epochs} - " +
+                f"TrainLoss: {PURPLE}{metrics['Train']['Loss'][-1]:.6f}{YELLOW} " +
+                f"ValLoss: {PURPLE}{metrics['Val']['Loss'][-1]:.6f}{YELLOW}", end="")
             if metrics['Val']['Loss'][-1] < minloss:
                 minloss = metrics['Val']['Loss'][-1]
                 best_lay = copy.deepcopy(self.layers)
@@ -117,6 +134,5 @@ class Network:
                 if wait >= patience:
                     break
 
-        self.plotMetric(metrics['Val']['Loss'], 'red', 'Validation Loss')
-        self.plotMetric(metrics['Val']['Acc'], 'blue', 'ValAcc')
-        print(metrics['Val']['Loss'][-1])
+        plotMetric(metrics['Val']['Loss'], 'red', 'Validation Loss')
+        plotMetric(metrics['Val']['Acc'], 'blue', 'ValAcc')
