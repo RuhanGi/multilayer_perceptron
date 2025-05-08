@@ -1,15 +1,5 @@
 import numpy as np
 
-RED = "\033[91m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-BLUE = "\033[94m"
-PURPLE = "\033[95m"
-CYAN = "\033[96m"
-GRAY = "\033[97m"
-BLACK = "\033[98m"
-RESET = "\033[0m"
-
 def sigmoid(x):
     out = np.empty_like(x)
     pos_mask = x >= 0
@@ -57,16 +47,12 @@ def dsoftplus(x):
     return 1 if x > 20 else 1 - sigmoid(-x)
 
 def getFunc(act):
-    try:
-        funcy = {
-            'sigmoid' : (sigmoid, dsigmoid),
-            'tanh' : (tanh, dtanh),
-            'ReLU' : (ReLU, dReLU),
-            'ELU' : (ELU, dELU),
-            'softmax' : (softmax, dlinear),
-            'softplus' : (softplus, dsoftplus)
-        }
-        return funcy[act]
-    except Exception as e:
-        print(RED + "Error: " + str(e) + RESET)
-        sys.exit(1)
+    funcy = {
+        'sigmoid' : (sigmoid, dsigmoid),
+        'tanh' : (tanh, dtanh),
+        'ReLU' : (ReLU, dReLU),
+        'ELU' : (ELU, dELU),
+        'softmax' : (softmax, dlinear),
+        'softplus' : (softplus, dsoftplus)
+    }
+    return funcy[act]

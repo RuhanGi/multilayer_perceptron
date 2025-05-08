@@ -24,27 +24,24 @@ def loadData(fil):
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
 
-def make_onehot(labels, mapper=None):
-    if mapper is None:
-        unique = np.unique(labels)
-        mapper = {label: i for i, label in enumerate(unique)}
-    return np.array([self.mapper[v] for v in train_out])
-
-# ! check if needed
-def undo_onehot(onehot, mapper):
-    return np.eye(len(mapper))[onehot]
-
 def main():
     if len(sys.argv) != 3:
         print(GREEN + " Usage:  " + YELLOW + "python3 train.py {traindata}.csv {valdata}.csv" + RESET)
         sys.exit(0)
 
+    np.set_printoptions(suppress=True)
+
     train, train_out = loadData(sys.argv[1])
     val, val_out = loadData(sys.argv[2])
 
     n = Network(train, train_out)
-    
-    print(n.calculate())
+    n.addLayer(24)
+    n.addLayer(15)
+    n.fit(val, val_out)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(RED + "Error: " + str(e) + RESET)
+        sys.exit(1)

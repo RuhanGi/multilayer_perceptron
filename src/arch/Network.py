@@ -18,6 +18,12 @@ def binaryCross(true, pred):
     assert len(true) == len(pred), "length mismatch"
     return -np.mean(true * np.log(pred) + (1-true) * np.log(1-pred))
 
+def crossEntropy(probs, one_hot):
+    assert probs.shape == one_hot.shape, "shape mismatch"
+    epsilon = 1e-15
+    probs = np.clip(probs, epsilon, 1 - epsilon)
+    return np.mean(-np.sum(one_hot * np.log(probs), axis=1))
+
 def plotMetrics(tmetrics, vmetrics):
         fig, axs = plt.subplots(1, 2, figsize=(15, 6))
 
@@ -99,6 +105,10 @@ class Network:
         metrics['Prec'].append(tp / (tp + fp + 1e-8))
         metrics['F1'].append(tp / (tp + (fp + fn) / 2 + 1e-8))
 
+    def makeOnehot(self, y_out):
+        indices = np.array([self.mapper[label] for label in y_out])
+        return np.eye(len(self.mapper))[indices]
+
     def fit(self, learningRate=0.01, batch_size=8, epochs=400, optimizer='minibatch'):
         try:
             self.addLayer(len(self.mapper), 'softmax')
@@ -114,7 +124,7 @@ class Network:
             for e in range(epochs):
                 for i in range(0, len(self.train), batch_size):
                     output = self.predict(self.train[i:i+batch_size])
-            
+
                     error = output - np.eye(len(self.mapper))[self.train_out[i:i+batch_size]]
                     for layer in reversed(self.layers):
                         if optimizer == 'adam':
@@ -133,9 +143,11 @@ class Network:
                 else:
                     wait += 1
                     if wait >= patience:
-                        break
+                        break 
             self.layers = best_lay
             # plotMetrics(tmetrics, vmetrics)
+            one_hot = np.eye(len(self.mapper))[self.val_out]
+            print(crossEntropy(one_hot, self.predict(self.val)))
             return best_acc, vmetrics
         except Exception as e:
             print(RED + "Error: " + str(e) + RESET)

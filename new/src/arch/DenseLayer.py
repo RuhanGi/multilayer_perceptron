@@ -1,4 +1,4 @@
-from actfunc import *
+from .actfunc import getFunc
 import numpy as np
 
 # ! Might Delete if passing in learningRate backprop
@@ -16,11 +16,14 @@ class DenseLayer:
     """
 
     def __init__(self, num_input, num_nodes, act):
+        assert isinstance(num_input, int), "integers only"
+        assert isinstance(num_nodes, int), "integers only"
+
         limit = np.sqrt(6 / num_input)
         self.weights = np.random.uniform(-limit, limit, (num_input+1, num_nodes))
-        self.func, self.dfunc = af.getFunc(act)
+        self.func, self.dfunc = getFunc(act)
 
-    def calculate(self, inputs):
+    def forward(self, inputs):
       """
       Feedforward
 
@@ -29,7 +32,7 @@ class DenseLayer:
               z: w•i for each node and sample (samples, num_nodes)
          output: applying activation function (samples, num_nodes)
       """
-      assert inputs.shape[1]+1 == weights.shape[0], "shape mismatch"
+      assert inputs.shape[1]+1 == self.weights.shape[0], "shape mismatch"
 
       self.input = np.hstack([inputs, np.ones((inputs.shape[0], 1))])
       self.z = self.input @ self.weights
@@ -51,12 +54,13 @@ class DenseLayer:
         """
         assert error.shape == self.z.shape, "shape mismatch"
         assert self.input.shape[0] == error.shape[0], "shape mismatch"
-        assert learningRate.shape == self.weights.shape, "shape mismatch" # or learningRate is float
-        assert error.shape[1] == self.weights.shape[1]-1, "shape mismatch"
+        # assert learningRate.shape == self.weights.shape, "shape mismatch" # or learningRate is float
+        assert error.shape[1] == self.weights.shape[1], "shape mismatch"
+
 
         delta = error * self.dfunc(self.z)
         grad = self.input.T @ delta
         self.weights -= learningRate * grad
         return delta @ self.weights[:-1].T
 
-print(af.GREEN + "All Good!" + af.RESET)
+# print(GREEN + "All Good!" + RESET)
