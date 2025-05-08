@@ -41,7 +41,7 @@ fclean: clean
 
 gpush: fclean
 	git add .
-	git commit -m "New"
+	git commit -m "Successful Loss"
 	git push
 
 re: fclean all

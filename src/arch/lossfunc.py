@@ -5,7 +5,8 @@ def crossEntropy(probs, one_hot):
     assert probs.shape == one_hot.shape, "shape mismatch"
     epsilon = 1e-15
     probs = np.clip(probs, epsilon, 1 - epsilon)
-    return np.mean(-np.sum(one_hot * np.log(probs), axis=1))
+    per_sample = -np.sum(one_hot * np.log(probs), axis=1)
+    return np.mean(per_sample)
 
 def dcrossEntropy(probs, one_hot):
     assert probs.shape == one_hot.shape, "shape mismatch"
@@ -31,7 +32,7 @@ def drootMeanSquare(probs, one_hot):
 
 def getLoss(loss):
     funcy = {
-        'crossEntropy' : (crossEntropy, dcrossEntropy),
+        'crossEntropy' : (crossEntropy, dmeanSquare),
         'meanSquare' : (meanSquare, dmeanSquare),
         'rootMeanSquare' : (rootMeanSquare, drootMeanSquare)
     }

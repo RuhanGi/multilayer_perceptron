@@ -18,9 +18,9 @@ def loadData(fil):
     try:
         df = pd.read_csv(fil, header=None)
         df.dropna(inplace=True)
-        train = np.array(df.iloc[:, 2:])
-        train_out = np.array(df.iloc[:,1])
-        return train, train_out
+        features = np.array(df.iloc[:, 2:])
+        labels = np.array(df.iloc[:,1])
+        return features, labels
     except Exception as e:
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)

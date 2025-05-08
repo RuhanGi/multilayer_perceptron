@@ -37,8 +37,8 @@ def dlinear(z):
     return np.ones_like(z)
 
 def softmax(z):
-    exp = np.exp(z - np.max(z, axis=0, keepdims=True))
-    return exp / np.sum(exp, axis=0, keepdims=True)
+    exp = np.exp(z - np.max(z, axis=1, keepdims=True))
+    return exp / np.sum(exp, axis=1, keepdims=True)
 
 def softplus(x):
     return x if x > 20 else np.log(1 + np.exp(x))
