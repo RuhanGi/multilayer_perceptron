@@ -19,6 +19,9 @@ class DenseLayer:
         self.weights = np.random.uniform(-limit, limit, (num_input+1, num_nodes))
         self.func, self.dfunc = getFunc(act)
 
+        self.velocity = np.zeros_like(self.weights)
+        self.momentum = np.zeros_like(self.weights)
+
     def forward(self, inputs):
       """
       Feedforward
@@ -35,7 +38,7 @@ class DenseLayer:
       self.output = self.func(self.z)
       return self.output
 
-    def backprop(self, error, learningRate):
+    def backprop(self, error, learningRate, opt, e):
         """
         Backpropate using the loss and update weights
 
@@ -50,10 +53,18 @@ class DenseLayer:
         """
         assert error.shape == self.z.shape, "shape mismatch"
         assert self.input.shape[0] == error.shape[0], "shape mismatch"
-        # assert learningRate.shape == self.weights.shape, "shape mismatch" # or learningRate is float
         assert error.shape[1] == self.weights.shape[1], "shape mismatch"
 
         delta = error * self.dfunc(self.z)
         grad = self.input.T @ delta
+
+        if opt == 'adam' or opt == 'rmsprop':
+          decay1, decay2, epsilon = 0.9, 0.99, 10**-8
+          self.velocity = decay2 * self.velocity + (1-decay2) * grad**2
+          learningRate = learningRate / (np.sqrt(self.velocity) + epsilon)
+          if opt == 'adam':
+            self.momentum = decay1 * self.momentum + (1-decay1**e) * grad
+            grad = self.momentum / (1 - decay1 ** e)
+
         self.weights -= learningRate * grad
         return delta @ self.weights[:-1].T

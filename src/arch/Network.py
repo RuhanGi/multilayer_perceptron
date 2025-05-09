@@ -54,10 +54,10 @@ class Network:
             passer = layer.forward(passer)
         return passer
 
-    def backprop(self, passer, learningRate, normalize=False, optimizer='default'):
+    def backprop(self, passer, learningRate, opt, e):
         assert passer.shape[1] == len(self.mapper), "shape mismatch"
         for layer in reversed(self.layers):
-            passer = layer.backprop(passer, learningRate)
+            passer = layer.backprop(passer, learningRate, opt, e)
         return passer
 
     def calcLoss(self, val, val_out, loss='crossEntropy'):
@@ -99,13 +99,14 @@ class Network:
 
     def printEpoch(self, e, epochs, metrics):
         tLoss = metrics['Train']['Loss'][-1]
+        tLoss = f"{GREEN if tLoss < 0.08 else RED}[{tLoss:.6f}]{YELLOW}"
         vLoss = metrics['Val']['Loss'][-1]
-        print(f"{YELLOW}\rEpoch {e}/{epochs} - " +
-                f"TrainLoss={GREEN if tLoss < 0.08 else RED}[{tLoss:.6f}]{YELLOW} " +
-                f"ValLoss={GREEN if vLoss < 0.08 else RED}[{vLoss:.6f}]{YELLOW}", end="")
+        vLoss = f"{GREEN if vLoss < 0.08 else RED}[{vLoss:.6f}]{RESET}"
+        print(f"{YELLOW}\rEpoch {str(e).zfill(len(str(epochs)))}/{epochs}" +
+            f"- TrainLoss={tLoss} ValLoss={vLoss}", end="")
 
     def fit(self, val, val_out, plot=False, epochs=400, loss='crossEntropy',
-             batch_size=8,learningRate=0.01, optimizer='minibatch'):
+             batch_size=8,learningRate=0.01, opt=''):
 
         assert len(val) == len(val_out), "sample mismatch"
         assert self.train.shape[1] == val.shape[1], "feature mismatch"
@@ -117,6 +118,7 @@ class Network:
         lFunc = getLoss(loss)
 
         metrics = {
+            "Opt": opt,
             "Train": {'Loss': [], 'Acc': [], 'Recall': [], 'Prec': [], 'F1': []},
             "Val": {'Loss': [], 'Acc': [], 'Recall': [], 'Prec': [], 'F1': []}
         }
@@ -125,13 +127,17 @@ class Network:
         minloss, best_lay = 100, None
         patience, wait = 10, 0
 
-        for e in range(epochs):
+        if opt == 'adam' or opt == 'rmsprop':
+            decay, epsilon = 0.95, 10**-8
+            velocity = np.zeros_like(self.layers[-1].weights)
+
+        for e in range(1,epochs):
             for i in range(0, len(self.train), batch_size):
                 probs = self.forward(self.train[i:i+batch_size])
                 dLdp = self.error(probs, self.train_hot[i:i+batch_size])
-                self.backprop(dLdp, learningRate)
+                self.backprop(dLdp, learningRate, opt, e)
             self.metricize(val, one_hot, metrics, lFunc)
-            self.printEpoch(e+1, epochs, metrics)
+            self.printEpoch(e, epochs, metrics)
             if metrics['Val']['Loss'][-1] < minloss:
                 minloss = metrics['Val']['Loss'][-1]
                 best_lay = copy.deepcopy(self.layers)

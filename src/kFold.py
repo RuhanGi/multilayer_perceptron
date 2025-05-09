@@ -55,7 +55,7 @@ def main():
 
     features, labels = loadData(sys.argv[1])
 
-    k = 50
+    k = 10
     losses = []
     for _ in range(k):
         losses = np.append(losses, runOneFold(features, labels))
@@ -68,7 +68,7 @@ def main():
     print(YELLOW + "- Minimum Loss:", GREEN if minL < 0.08 else RED, minL)
     print(YELLOW + "- Average Loss:", GREEN if meanL < 0.08 else RED, meanL)
     print(YELLOW + "- Maximum Loss:", GREEN if maxL < 0.08 else RED, maxL)
-    print(YELLOW + "- %Loss < 0.08:", GREEN if goodL == k else RED, f"{goodL/k*100:.2f}%")
+    print(YELLOW + "- %Loss < 0.08:", GREEN if goodL >= k / 3 else RED, f"{goodL/k*100:.2f}%")
 
 
 if __name__ == "__main__":

@@ -35,9 +35,10 @@ k:
 
 clean:
 	find . \( -name "__pycache__" -o -name ".DS_Store" \) -print0 | xargs -0 rm -rf
-	rm -rf data/train.csv data/val.csv net.pkl
+	rm -rf data/train.csv data/val.csv
 
 fclean: clean
+	rm -rf net.pkl
 	find . -name .DS_Store -delete
 
 gpush: fclean
