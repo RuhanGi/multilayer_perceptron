@@ -33,16 +33,26 @@ def loadNetwork(fil):
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
 
+def crossEntropy(probs, one_hot):
+    assert probs.shape == one_hot.shape, "shape mismatch"
+    epsilon = 1e-15
+    probs = np.clip(probs, epsilon, 1 - epsilon)
+    per_sample = -np.sum(one_hot * np.log(probs), axis=1)
+    return np.mean(per_sample)
+
 def main():
     if len(sys.argv) != 3:
-        print(GREEN + " Usage:  " + YELLOW + "python3 train.py {traindata}.csv {valdata}.csv" + RESET)
+        print(GREEN + " Usage:  " + YELLOW + "python3 train.py {valdata}.csv {net}.pkl" + RESET)
         sys.exit(0)
 
-    inputs, val_out = loadData(sys.argv[1])
+    val, val_out = loadData(sys.argv[1])
     net = loadNetwork(sys.argv[2])
 
-    output = net.predict(inputs, val_out=val_out, needsNormal=True)
-    print(f"Binary Cross Entropy Loss is: ", output)
+
+    loss = net.calcLoss(val, val_out)
+    print(YELLOW + "Binary Cross Entropy Loss is: ", end="")
+    print(GREEN if loss < 0.08 else RED, end="")
+    print(loss, RESET)
 
 if __name__ == "__main__":
     main()

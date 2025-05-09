@@ -16,14 +16,7 @@ RESET = "\033[0m"
 
 def loadData(fil):
     try:
-        return pd.read_csv(fil, header=None)
-    except Exception as e:
-        print(RED + "Error: " + str(e) + RESET)
-        sys.exit(1)
-
-
-def cleanData(df):
-    try:
+        df = pd.read_csv(fil, header=None)
         df.dropna(inplace=True)
         df.drop_duplicates(inplace=True)
         return df
@@ -31,13 +24,10 @@ def cleanData(df):
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
 
-
 def splitData(df, ratio=0.8):
     shuffle = np.random.permutation(df.index)
     size = int(ratio * len(df))
-
     return df.iloc[shuffle[:size]], df.iloc[shuffle[size:]]
-
 
 def main():
     if len(sys.argv) != 2:
@@ -45,12 +35,13 @@ def main():
         sys.exit(1)
 
     df = loadData(sys.argv[1])
-    df = cleanData(df)
-    train, val = splitData(df)
+    ratio = 0.8
+
+    train, val = splitData(df, ratio=ratio)
 
     train.to_csv("data/train.csv", header=False, index=False)
     val.to_csv("data/val.csv", header=False, index=False)
-
+    print(GREEN + f"{ratio*100:.0f}% Train/Test Split Successfull!" + RESET)
 
 if __name__ == "__main__":
     main()

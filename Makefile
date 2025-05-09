@@ -10,7 +10,7 @@ RESET  = \033[0m\n
 
 all: check
 	printf "$(GREEN) Packages Ready! $(RESET)"
-	printf "$(GREY)  Usage:$(YELLOW) make gen, a $(RESET)"
+	printf "$(GREY)  Usage:$(YELLOW) make {gen, t, p} $(RESET)"
 
 check:
 	for pkg in $(PKGS); do \
@@ -19,29 +19,30 @@ check:
 		fi; \
 	done
 
-v:
-	python3 $(SRCDIR)/visual.py data/data.csv
+a: gen t p
+
+gen:
+	python3 $(SRCDIR)/split.py data/data.csv
 
 t:
 	python3 $(SRCDIR)/train.py data/train.csv data/val.csv
 
 p:
-	python3 $(SRCDIR)/predict.py data/val.csv adamn.pkl
+	python3 $(SRCDIR)/predict.py data/val.csv net.pkl
 
-
-gen:
-	python3 $(SRCDIR)/split.py data/data.csv
+k:
+	python3 $(SRCDIR)/kFold.py data/data.csv
 
 clean:
 	find . \( -name "__pycache__" -o -name ".DS_Store" \) -print0 | xargs -0 rm -rf
-	rm -rf data/train.csv data/val.csv adamn.pkl
+	rm -rf data/train.csv data/val.csv net.pkl
 
 fclean: clean
 	find . -name .DS_Store -delete
 
 gpush: fclean
 	git add .
-	git commit -m "Successful Loss"
+	git commit -m "Colors"
 	git push
 
 re: fclean all

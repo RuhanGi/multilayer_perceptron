@@ -1,6 +1,8 @@
 from arch import Network
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import pickle
 import sys
 
 RED = "\033[91m"
@@ -24,6 +26,15 @@ def loadData(fil):
         print(RED + "Error: " + str(e) + RESET)
         sys.exit(1)
 
+def plotMetrics(metrics):
+    # * Plot Loss function of different optimizers
+    # * Plot 'Acc', 'F1'
+    plt.plot(metrics['Val']['Loss'], color='red')
+
+    plt.tight_layout()
+    plt.gcf().canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
+    plt.show()
+
 def main():
     if len(sys.argv) != 3:
         print(GREEN + " Usage:  " + YELLOW + "python3 train.py {traindata}.csv {valdata}.csv" + RESET)
@@ -37,10 +48,12 @@ def main():
     n = Network(train, train_out)
     n.addLayer(24)
     n.addLayer(15)
-    n.fit(val, val_out)
+    metrics = n.fit(val, val_out)
 
-    # with open('adamn.pkl', 'wb') as f:
-    #     pickle.dump(adamn, f)
+    plotMetrics(metrics)
+
+    with open('net.pkl', 'wb') as f:
+        pickle.dump(n, f)
 
 if __name__ == "__main__":
     main()

@@ -1,41 +1,75 @@
-self.velocity = np.zeros_like(self.weights)
-self.momentum = np.zeros_like(self.weights)
+from arch import Network
+import pandas as pd
+import numpy as np
+import sys
 
-def adambackprop(self, error, learningRate):
-    assert error.shape[1] == self.num_nodes, "shape mismatch"
-    grad = error * self.dfunc(self.z)
-    delt = self.input.T @ grad
-    decay1, decay2, epsilon = 0.9, 0.99, 10**-8
-    self.momentum = decay1 * self.momentum + (1-decay1) * delt
-    self.velocity = decay2 * self.velocity + (1-decay2) * delt**2
-    self.weights -= learningRate * self.momentum / (np.sqrt(self.velocity) + epsilon)
-    return grad @ self.weights[:-1].T
 
-def rmsbackprop(self, error, learningRate):
-    assert error.shape[1] == self.num_nodes, "shape mismatch"
-    grad = error * self.dfunc(self.z)
-    delt = self.input.T @ grad
-    decay, epsilon = 0.95, 10**-8
-    self.velocity = decay * self.velocity + (1-decay) * delt**2
-    self.weights -= learningRate * delt / (np.sqrt(self.velocity) + epsilon)
-    return grad @ self.weights[:-1].T
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+PURPLE = "\033[95m"
+CYAN = "\033[96m"
+GRAY = "\033[97m"
+BLACK = "\033[98m"
+RESET = "\033[0m"
 
+
+def loadData(fil):
+    try:
+        df = pd.read_csv(fil, header=None)
+        df.dropna(inplace=True)
+        features = np.array(df.iloc[:, 2:])
+        labels = np.array(df.iloc[:, 1])
+        return features, labels
+    except Exception as e:
+        print(RED + "Error: " + str(e) + RESET)
+        sys.exit(1)
+
+
+def splitData(features, labels, ratio=0.8):
+    shuffle = np.random.permutation(len(features))
+    size = int(ratio * len(features))
+    train = features[shuffle[:size]]
+    train_out = labels[shuffle[:size]]
+    val = features[shuffle[size:]]
+    val_out = labels[shuffle[size:]]
+    return train, train_out, val, val_out
+
+
+def runOneFold(features, labels):
+    train, train_out, val, val_out = splitData(features, labels)
+
+    n = Network(train, train_out)
+    n.addLayer(24)
+    n.addLayer(15)
+    n.fit(val, val_out)
+
+    return n.calcLoss(val, val_out)
 
 
 def main():
-    accs = []
-    k = 400
-    bs, ba, bn = 0,0, None
-    offset = np.random.randint(10**5)
-    for i in range(offset, offset+k):
-        acc, n, met = run(train, train_out, val, val_out, seed=i, opt='adam')
-        print(GRAY + f"\rModel: {i-offset}/{k}", end="")
-        accs.append(acc)
-        if acc > ba:
-            bs, ba, bn = i, acc, n
+    if len(sys.argv) != 2:
+        print(GREEN + " Usage:  " + YELLOW + "python3 train.py {data}.csv" + RESET)
+        sys.exit(0)
 
-    print(BLUE + f"\rBest Accuracy: {PURPLE}{ba*100:.4f}%{BLUE} by Seed {i}" + RESET)
-    print(f"{GREEN}{k}-Fold Acc: {PURPLE}{np.average(accs)*100:.4f}%{RESET}")
+    features, labels = loadData(sys.argv[1])
+
+    k = 50
+    losses = []
+    for _ in range(k):
+        losses = np.append(losses, runOneFold(features, labels))
+    minL = np.min(losses)
+    meanL = np.mean(losses)
+    maxL = np.max(losses)
+    goodL = np.sum(losses < 0.08)
+
+    print(BLUE + f"Distribution of {k}-Fold Cross Validation:")
+    print(YELLOW + "- Minimum Loss:", GREEN if minL < 0.08 else RED, minL)
+    print(YELLOW + "- Average Loss:", GREEN if meanL < 0.08 else RED, meanL)
+    print(YELLOW + "- Maximum Loss:", GREEN if maxL < 0.08 else RED, maxL)
+    print(YELLOW + "- %Loss < 0.08:", GREEN if goodL == k else RED, f"{goodL/k*100:.2f}%")
+
 
 if __name__ == "__main__":
     main()

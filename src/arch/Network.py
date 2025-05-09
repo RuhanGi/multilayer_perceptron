@@ -1,6 +1,5 @@
 from .DenseLayer import DenseLayer
 from .lossfunc import getLoss
-import matplotlib.pyplot as plt
 import numpy as np
 import copy
 
@@ -13,13 +12,6 @@ CYAN = "\033[96m"
 GRAY = "\033[97m"
 BLACK = "\033[98m"
 RESET = "\033[0m"
-
-def plotMetric(y, c, what):
-        plt.plot(y, color=c, label=what)
-        plt.ylim(0, int(np.max(y)+1))
-        plt.tight_layout()
-        plt.gcf().canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
-        plt.show()
 
 class Network:
     """
@@ -68,32 +60,49 @@ class Network:
             passer = layer.backprop(passer, learningRate)
         return passer
 
+    def calcLoss(self, val, val_out, loss='crossEntropy'):
+        probs = self.forward(val, normalize=True)
+        one_hot = self.makeOnehot(val_out)
+        lFunc = getLoss(loss)
+        loss = lFunc(probs, one_hot)
+        return loss
+
+    def calcPercs(self, metrics, pred, true):
+        tp = np.sum((pred == 1) & (true == 1))
+        fp = np.sum((pred == 1) & (true != 1))
+        fn = np.sum((pred != 1) & (true == 1))
+        metrics['Recall'].append(tp / (tp + fn + 1e-8))
+        metrics['Prec'].append(tp / (tp + fp + 1e-8))
+        metrics['F1'].append(tp / (tp + (fp + fn) / 2 + 1e-8))
+
     def metricize(self, val, one_hot, metrics, lFunc):
         tprob = self.forward(self.train)
         vprob = self.forward(val)
+
         ttrue = np.argmax(self.train_hot, axis=1)
         vtrue = np.argmax(one_hot, axis=1)
         tpred = np.argmax(tprob, axis=1)
         vpred = np.argmax(vprob, axis=1)
+
         metrics['Train']['Acc'].append(np.mean(tpred == ttrue))
         metrics['Val']['Acc'].append(np.mean(vpred == vtrue))
-
         metrics['Train']['Loss'].append(lFunc(tprob, self.train_hot))
         metrics['Val']['Loss'].append(lFunc(vprob, one_hot))
 
-        # tp = np.sum((pred == 1) & (val_out == 1))
-        # fp = np.sum((pred == 1) & (val_out != 1))
-        # fn = np.sum((pred != 1) & (val_out == 1))
-
-        # metrics['Recall'].append(tp / (tp + fn + 1e-8))
-        # metrics['Prec'].append(tp / (tp + fp + 1e-8))
-        # metrics['F1'].append(tp / (tp + (fp + fn) / 2 + 1e-8))
-
-        # TODO more metrics
+        if len(self.mapper) == 2:
+            self.calcPercs(metrics['Train'], tpred, ttrue)
+            self.calcPercs(metrics['Val'], vpred, vtrue)
 
     def error(self, probs, one_hot):
         assert probs.shape == one_hot.shape, "shape mismatch"
         return probs - one_hot
+
+    def printEpoch(self, e, epochs, metrics):
+        tLoss = metrics['Train']['Loss'][-1]
+        vLoss = metrics['Val']['Loss'][-1]
+        print(f"{YELLOW}\rEpoch {e}/{epochs} - " +
+                f"TrainLoss={GREEN if tLoss < 0.08 else RED}[{tLoss:.6f}]{YELLOW} " +
+                f"ValLoss={GREEN if vLoss < 0.08 else RED}[{vLoss:.6f}]{YELLOW}", end="")
 
     def fit(self, val, val_out, plot=False, epochs=400, loss='crossEntropy',
              batch_size=8,learningRate=0.01, optimizer='minibatch'):
@@ -122,9 +131,7 @@ class Network:
                 dLdp = self.error(probs, self.train_hot[i:i+batch_size])
                 self.backprop(dLdp, learningRate)
             self.metricize(val, one_hot, metrics, lFunc)
-            print(f"{YELLOW}\rEpoch {e}/{epochs} - " +
-                f"TrainLoss: {PURPLE}{metrics['Train']['Loss'][-1]:.6f}{YELLOW} " +
-                f"ValLoss: {PURPLE}{metrics['Val']['Loss'][-1]:.6f}{YELLOW}", end="")
+            self.printEpoch(e+1, epochs, metrics)
             if metrics['Val']['Loss'][-1] < minloss:
                 minloss = metrics['Val']['Loss'][-1]
                 best_lay = copy.deepcopy(self.layers)
@@ -133,6 +140,8 @@ class Network:
                 wait += 1
                 if wait >= patience:
                     break
+        # TODO clean up early stopping
+        self.layers = best_lay
+        print(RESET)
 
-        plotMetric(metrics['Val']['Loss'], 'red', 'Validation Loss')
-        plotMetric(metrics['Val']['Acc'], 'blue', 'ValAcc')
+        return metrics
