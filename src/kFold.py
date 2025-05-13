@@ -43,19 +43,19 @@ def runOneFold(features, labels):
     n = Network(train, train_out)
     n.addLayer(24)
     n.addLayer(15)
-    n.fit(val, val_out)
+    n.fit(val, val_out, opt="")
 
     return n.calcLoss(val, val_out)
 
 
 def main():
     if len(sys.argv) != 2:
-        print(GREEN + " Usage:  " + YELLOW + "python3 train.py {data}.csv" + RESET)
+        print(GREEN + " Usage:  " + YELLOW + "python3 kFold.py {data}.csv" + RESET)
         sys.exit(0)
 
     features, labels = loadData(sys.argv[1])
 
-    k = 10
+    k = 20
     losses = []
     for _ in range(k):
         losses = np.append(losses, runOneFold(features, labels))

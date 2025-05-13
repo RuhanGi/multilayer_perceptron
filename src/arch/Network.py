@@ -146,7 +146,6 @@ class Network:
                 wait += 1
                 if wait >= patience:
                     break
-        # TODO clean up early stopping
         self.layers = best_lay
         print(RESET)
 

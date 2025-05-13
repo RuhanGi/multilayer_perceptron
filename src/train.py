@@ -2,6 +2,7 @@ from arch import Network
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import argparse
 import pickle
 import sys
 
@@ -58,57 +59,41 @@ def plotMetrics(*metrics):
     fig.canvas.mpl_connect('key_press_event', lambda event: plt.close() if event.key == 'escape' else None)
     plt.show()
 
-def run(train, train_out, val, val_out, opt='adam'):
+def run(layers, train, train_out, val, val_out, opt='adam'):
     n = Network(train, train_out)
-    n.addLayer(24)
-    n.addLayer(15)
+    for l in layers:
+        n.addLayer(l)
     metrics = n.fit(val, val_out, opt=opt)
     return n, metrics
 
 def main():
-    if len(sys.argv) != 3:
-        print(GREEN + " Usage:  " + YELLOW + "python3 train.py {traindata}.csv {valdata}.csv" + RESET)
-        sys.exit(0)
-
     parser = argparse.ArgumentParser(description='Training script for your model.')
+    parser.add_argument('train_csv', type=str, help='Path to training CSV file')
+    parser.add_argument('val_csv', type=str, help='Path to validation CSV file')
+    parser.add_argument('--layers', nargs='+', type=int, default=[24, 15],
+                        help='Number of nodes in each layer, e.g., --layers 24 15')
+    args = parser.parse_args()
 
-    # parser.add_argument('--layer', nargs='+', type=int, required=True,
-    #                     help='Number of units in each layer, e.g., 24 24 24')
-    # parser.add_argument('--epochs', type=int, required=True,
-    #                     help='Number of training epochs')
-    # parser.add_argument('--loss', type=str, required=True,
-    #                     help='Loss function to use, e.g., categoricalCrossentropy')
-    # parser.add_argument('--batch_size', type=int, required=True,
-    #                     help='Batch size for training')
-    # parser.add_argument('--learning_rate', type=float, required=True,
-    #                     help='Learning rate for optimizer')
-    # args = parser.parse_args()
+    train, train_out = loadData(args.train_csv)
+    val, val_out = loadData(args.val_csv)
+    layers = args.layers
 
-    np.set_printoptions(suppress=True)
+    n1, metrics1 = run(layers, train, train_out, val, val_out, opt='')
+    n2, metrics2 = run(layers, train, train_out, val, val_out, opt='rmsprop')
+    n3, metrics3 = run(layers, train, train_out, val, val_out, opt='adam')
 
-    train, train_out = loadData(sys.argv[1])
-    val, val_out = loadData(sys.argv[2])
-
-    n, metrics = run(train, train_out, val, val_out, opt='')
-    n2, metrics2 = run(train, train_out, val, val_out, opt='rmsprop')
-    n3, metrics3 = run(train, train_out, val, val_out, opt='adam')
-
-    plotMetrics(metrics, metrics2, metrics3)
-
+    plotMetrics(metrics1, metrics2, metrics3)
+    l1, l2, l3 = metrics1['Val']['Loss'][-1], metrics2['Val']['Loss'][-1], metrics3['Val']['Loss'][-1]
+    if l1 < l2 and l1 < l3:
+        n = n1
+    else:
+        n = n2 if l2 < l3 else n3
     with open('net.pkl', 'wb') as f:
         pickle.dump(n, f)
 
-# TODO
-# * Check BINARYYYY Cross Entropy is below 0.08
-# * Optimizers: Nesterov momentum, RMSprop, Adam
-
-# * 2. Pass personalization of networks as parameters
-# * 5. Evaluate the learning phase with multiple metrics.
-
 if __name__ == "__main__":
-    main()
-    # try:
-    #     main()
-    # except Exception as e:
-    #     print(RED + "Error: " + str(e) + RESET)
-    #     sys.exit(1)
+    try:
+        main()
+    except Exception as e:
+        print(RED + "Error: " + str(e) + RESET)
+        sys.exit(1)

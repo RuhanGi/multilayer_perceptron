@@ -2,7 +2,9 @@ import numpy as np
 
 def binaryCrossEntropy(probs, one_hot):
     assert probs.shape == one_hot.shape, "shape mismatch"
-    return -np.mean()
+    epsilon = 1e-15
+    probs = np.clip(probs, epsilon, 1 - epsilon)
+    return -np.mean(one_hot * np.log(probs) + (1 - one_hot) * np.log(1 - probs))
 
 def crossEntropy(probs, one_hot):
     assert probs.shape == one_hot.shape, "shape mismatch"

@@ -38,8 +38,8 @@ class DenseLayer:
       self.output = self.func(self.z)
       return self.output
 
-    def backprop(self, error, learningRate, opt, e):
-        """
+    def backprop(self, error, learningRate, opt, t):
+      """
         Backpropate using the loss and update weights
 
           error: dL/dy  (samples, num_nodes)
@@ -50,21 +50,25 @@ class DenseLayer:
            grad: dL/dw  (num_input+1, num_nodes)
           wghts: dz/dy1 (num_input+1, num_nodes)
           retrn: dL/dy1 (samples, num_input)
-        """
-        assert error.shape == self.z.shape, "shape mismatch"
-        assert self.input.shape[0] == error.shape[0], "shape mismatch"
-        assert error.shape[1] == self.weights.shape[1], "shape mismatch"
+      """
+      assert error.shape == self.z.shape, "shape mismatch"
+      delta = error * self.dfunc(self.z)
+      grad = self.input.T @ delta
 
-        delta = error * self.dfunc(self.z)
-        grad = self.input.T @ delta
+      if opt == 'rmsprop':
+          decay2, epsilon = 0.99, 1e-8
+          self.velocity = decay2 * self.velocity + (1 - decay2) * grad**2
+          update = grad / (np.sqrt(self.velocity) + epsilon)
+          self.weights -= learningRate * update
+      elif opt == 'adam':
+          decay1, decay2, epsilon = 0.9, 0.999, 1e-8
+          self.momentum = decay1 * self.momentum + (1 - decay1) * grad
+          self.velocity = decay2 * self.velocity + (1 - decay2) * grad**2
+          m_hat = self.momentum / (1 - decay1 ** t)
+          v_hat = self.velocity / (1 - decay2 ** t)
+          update = m_hat / (np.sqrt(v_hat) + epsilon)
+          self.weights -= learningRate * update
+      else:
+          self.weights -= learningRate * grad
 
-        if opt == 'adam' or opt == 'rmsprop':
-          decay1, decay2, epsilon = 0.9, 0.99, 10**-8
-          self.velocity = decay2 * self.velocity + (1-decay2) * grad**2
-          learningRate = learningRate / (np.sqrt(self.velocity) + epsilon)
-          if opt == 'adam':
-            self.momentum = decay1 * self.momentum + (1-decay1**e) * grad
-            grad = self.momentum / (1 - decay1 ** e)
-
-        self.weights -= learningRate * grad
-        return delta @ self.weights[:-1].T
+      return delta @ self.weights[:-1].T
